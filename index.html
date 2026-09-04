@@ -529,6 +529,75 @@
             color: white;
             box-shadow: 0 0 15px var(--glow);
         }
+
+        /* Modal Styles for Ticket Receipt */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        .ticket-modal {
+            background: linear-gradient(145deg, #0e1124, #080c1e);
+            border: 2px solid var(--accent);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            padding: 24px;
+            box-shadow: 0 25px 60px rgba(16, 185, 129, 0.3);
+            text-align: center;
+            position: relative;
+            animation: ticketScaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes ticketScaleUp {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .ticket-success-icon {
+            width: 64px; height: 64px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: var(--accent);
+            margin: 0 auto 16px;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+            animation: checkBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes checkBounce {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        .ticket-receipt-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px dashed var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0;
+            text-align: left;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .ticket-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 6px;
+        }
+        .ticket-row span:first-child { color: var(--text-muted); font-weight: 700; }
+        .ticket-row span:last-child { color: #fff; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -540,6 +609,25 @@
         <div class="intro-brand-launch">Launched by ClickPay Digital</div>
         <div class="intro-loader-bar">
             <div class="intro-loader-progress"></div>
+        </div>
+    </div>
+
+    <!-- Professional Ticket Receipt Modal -->
+    <div id="ticketModalOverlay" class="modal-overlay">
+        <div class="ticket-modal">
+            <div class="ticket-success-icon">✓</div>
+            <h3 style="color: var(--accent); font-size: 16px; font-weight: 900; text-transform: uppercase; margin-bottom: 4px;">Application Sent Successfully!</h3>
+            <p style="color: var(--text-muted); font-size: 11px; margin-bottom: 14px;">Your professional credentials have been sent directly to the employers.</p>
+            
+            <div class="ticket-receipt-card" id="ticketReceiptContent">
+                <!-- Dynamically filled receipt details -->
+            </div>
+
+            <div style="font-size: 10px; color: var(--warning); font-weight: 800; margin-bottom: 16px;">
+                ⏳ Redirecting to dashboard in <span id="redirectCountdown">10</span> seconds...
+            </div>
+
+            <button class="action-btn" style="width: 100%; padding: 12px; background: var(--accent);" onclick="closeTicketModalAndRedirect()">Return to Dashboard Now</button>
         </div>
     </div>
 
@@ -764,7 +852,6 @@
 
                 <button class="action-btn" style="width:100%; padding:15px; margin-top:8px;" onclick="submitJobApplication()">🚀 Submit Professional Application (-0.5 Pts)</button>
                 <div id="jobAlertBox" class="inline-alert"></div>
-                <div id="jobSuccessBox" class="inline-success">Professional application submitted successfully and sent to official bot!</div>
             </div>
             <div class="footer-copyright">
                 © 2026 ClickPay Pro. All Rights Reserved.
@@ -915,6 +1002,7 @@
 
         let selectedJobSchedule = 'Part-Time';
         let selectedEducationLevel = 'College Diploma';
+        let redirectTimerInterval = null;
 
         const TASK_SHEET_URL = "https://docs.google.com/spreadsheets/d/1BZ4K_8kbMDp9_F_8W-j4AsDZsYKTIEODIn1lcxovBTc/export?format=csv&gid=2110496584";
         const PROMOTION_SHEET_URL = "https://docs.google.com/spreadsheets/d/1BZ4K_8kbMDp9_F_8W-j4AsDZsYKTIEODIn1lcxovBTc/export?format=csv&gid=0";
@@ -1170,8 +1258,7 @@
             let desc = document.getElementById('jobDesc').value.trim();
 
             let alertBox = document.getElementById('jobAlertBox');
-            let successBox = document.getElementById('jobSuccessBox');
-            alertBox.style.display = 'none'; successBox.style.display = 'none';
+            alertBox.style.display = 'none';
 
             if(!fullName || !age || !phone || !address || !skills || !portfolio || !exp || !salary || !desc) {
                 alertBox.innerText = "⚠️ Please fill in all professional application fields including your portfolio link!";
@@ -1191,7 +1278,7 @@
             localStorage.setItem('clickpay_worker_users_pro', JSON.stringify(registeredUsers));
             updateWorkerWalletCard();
 
-            let jobMsg = `💼 <b>New Professional Career Application!</b>\n\n` +
+            let jobMsg = `💼 <b>New Professional Career Application (Sent Directly to Employers)!</b>\n\n` +
                          `👤 Name: ${fullName}\n` +
                          `🎂 Age: ${age} | Phone: ${phone}\n` +
                          `📍 Address: ${address}\n` +
@@ -1203,9 +1290,24 @@
                          `📝 Professional Summary: ${desc}\n\n` +
                          `💬 Telegram: ${currentUser.tgUser}`;
             
+            // Send instantly with zero delay
             sendToTelegramBotInstant(jobMsg);
 
-            successBox.style.display = 'block';
+            // Populate Ticket Receipt Card
+            let receiptContainer = document.getElementById('ticketReceiptContent');
+            receiptContainer.innerHTML = `
+                <div class="ticket-row"><span>Applicant:</span><span>${fullName}</span></div>
+                <div class="ticket-row"><span>Schedule:</span><span>${selectedJobSchedule}</span></div>
+                <div class="ticket-row"><span>Education:</span><span>${eduLevel}</span></div>
+                <div class="ticket-row"><span>Experience:</span><span>${exp} Years</span></div>
+                <div class="ticket-row"><span>Expected Salary:</span><span>${salary} ETB</span></div>
+                <div class="ticket-row"><span>Status:</span><span style="color:var(--accent);">Sent to Employers</span></div>
+            `;
+
+            // Show Ticket Modal
+            document.getElementById('ticketModalOverlay').style.display = 'flex';
+
+            // Clear Form Inputs
             document.getElementById('jobFullName').value = '';
             document.getElementById('jobAge').value = '';
             document.getElementById('jobPhone').value = '';
@@ -1216,7 +1318,26 @@
             document.getElementById('jobSalary').value = '';
             document.getElementById('jobDesc').value = '';
             document.getElementById('salaryEstimateBox').style.display = 'none';
-            setTimeout(() => { successBox.style.display = 'none'; }, 5000);
+
+            // Start 10 seconds auto-redirect timer
+            let countdownLeft = 10;
+            document.getElementById('redirectCountdown').textContent = countdownLeft;
+            if(redirectTimerInterval) clearInterval(redirectTimerInterval);
+
+            redirectTimerInterval = setInterval(() => {
+                countdownLeft--;
+                document.getElementById('redirectCountdown').textContent = countdownLeft;
+                if(countdownLeft <= 0) {
+                    clearInterval(redirectTimerInterval);
+                    closeTicketModalAndRedirect();
+                }
+            }, 1000);
+        }
+
+        function closeTicketModalAndRedirect() {
+            if(redirectTimerInterval) clearInterval(redirectTimerInterval);
+            document.getElementById('ticketModalOverlay').style.display = 'none';
+            switchTab('worker-dashboard');
         }
 
         function loadGoogleSheetCSV(sheetUrl, callback) {
