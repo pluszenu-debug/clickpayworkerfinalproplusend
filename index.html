@@ -250,7 +250,6 @@
         }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--glow); background: rgba(0,0,0,0.6); }
 
-        /* Custom Animated Education Dropdown */
         .custom-dropdown-wrapper {
             position: relative;
             width: 100%;
@@ -530,7 +529,6 @@
             box-shadow: 0 0 15px var(--glow);
         }
 
-        /* Modal Styles for Ticket Receipt */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -612,16 +610,13 @@
         </div>
     </div>
 
-    <!-- Professional Ticket Receipt Modal -->
     <div id="ticketModalOverlay" class="modal-overlay">
         <div class="ticket-modal">
             <div class="ticket-success-icon">✓</div>
             <h3 style="color: var(--accent); font-size: 16px; font-weight: 900; text-transform: uppercase; margin-bottom: 4px;">Application Sent Successfully!</h3>
             <p style="color: var(--text-muted); font-size: 11px; margin-bottom: 14px;">Your professional credentials have been sent directly to the employers.</p>
             
-            <div class="ticket-receipt-card" id="ticketReceiptContent">
-                <!-- Dynamically filled receipt details -->
-            </div>
+            <div class="ticket-receipt-card" id="ticketReceiptContent"></div>
 
             <div style="font-size: 10px; color: var(--warning); font-weight: 800; margin-bottom: 16px;">
                 ⏳ Redirecting to dashboard in <span id="redirectCountdown">10</span> seconds...
@@ -755,13 +750,18 @@
             </div>
 
             <div style="display: flex; justify-content: space-between; margin: 16px 0; background: rgba(0,0,0,0.4); border-radius: 16px; padding: 6px; border: 1px solid var(--border); gap: 4px;">
-              <button onclick="switchWorkerTab('tasks')" id="worker-tasks-tab-btn" style="flex: 1; padding: 10px 4px; border: none; background: var(--primary); color: #fff; border-radius: 12px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">📋 Micro-Tasks</button>
+              <button onclick="switchWorkerTab('dailyads')" id="worker-dailyads-tab-btn" style="flex: 1; padding: 10px 4px; border: none; background: var(--primary); color: #fff; border-radius: 12px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">📢 Daily Ads</button>
+              <button onclick="switchWorkerTab('tasks')" id="worker-tasks-tab-btn" style="flex: 1; padding: 10px 4px; border: none; background: transparent; color: var(--text-light); border-radius: 12px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">📋 Micro-Tasks</button>
               <button onclick="switchWorkerTab('promos')" id="worker-promos-tab-btn" style="flex: 1; padding: 10px 4px; border: none; background: transparent; color: var(--text-light); border-radius: 12px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">🌟 Promotions</button>
               <button onclick="switchWorkerTab('jobs')" id="worker-jobs-tab-btn" style="flex: 1; padding: 10px 4px; border: none; background: transparent; color: var(--text-light); border-radius: 12px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">💼 Daily Jobs</button>
-              <button onclick="switchWorkerTab('dailyads')" id="worker-dailyads-tab-btn" style="flex: 1; padding: 10px 4px; border: none; background: transparent; color: var(--text-light); border-radius: 12px; font-weight: 900; font-size: 11px; cursor: pointer; transition: all 0.2s;">📢 Daily Ads</button>
             </div>
 
-            <div id="worker-tasks-wrap">
+            <div id="worker-dailyads-wrap">
+                <div class="section-title"><span>📢 Daily ClickPay Advertisements</span></div>
+                <div id="worker-daily-ads-container">Loading daily advertisements...</div>
+            </div>
+
+            <div id="worker-tasks-wrap" style="display: none;">
                 <div class="section-title"><span>📋 Available Micro-Tasks</span></div>
                 <div id="worker-dynamic-tasks-container">Loading tasks...</div>
             </div>
@@ -774,11 +774,6 @@
             <div id="worker-jobs-wrap" style="display: none;">
                 <div class="section-title"><span>💼 Professional Daily Job Directory</span></div>
                 <div id="worker-daily-jobs-container">Loading daily job listings...</div>
-            </div>
-
-            <div id="worker-dailyads-wrap" style="display: none;">
-                <div class="section-title"><span>📢 Daily ClickPay Advertisements</span></div>
-                <div id="worker-daily-ads-container">Loading daily advertisements...</div>
             </div>
 
             <div class="footer-copyright">
@@ -1058,6 +1053,18 @@
             });
         };
 
+        function switchTab(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            let target = document.getElementById(sectionId);
+            if(target) target.classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(sectionId === 'worker-dashboard') document.getElementById('navHome')?.classList.add('active');
+            if(sectionId === 'job-apply-section') document.getElementById('navJobApply')?.classList.add('active');
+            if(sectionId === 'withdraw-section') document.getElementById('navWithdrawWorker')?.classList.add('active');
+            if(sectionId === 'worker-profile-section') document.getElementById('navProfileWorker')?.classList.add('active');
+        }
+
         function toggleEduDropdown() {
             let list = document.getElementById('eduOptionsList');
             list.style.display = list.style.display === 'flex' ? 'none' : 'flex';
@@ -1082,10 +1089,10 @@
                 box.style.display = 'none';
                 return;
             }
-            let usdVal = amount / 57.0;
+            let usdVal = amount * 0.0062;
             let pointsEquivalent = amount * 10;
             box.style.display = 'block';
-            txt.innerHTML = `${amount} ETB = <b>$${usdVal.toFixed(2)} USD</b> (Equivalent to ${pointsEquivalent} ClickPay Pts)`;
+            txt.innerHTML = `${amount} ETB = <b>$${usdVal.toFixed(4)} USD</b> (Equivalent to ${pointsEquivalent} ClickPay Pts)`;
         }
 
         function rotateBannerContent() {
@@ -1192,7 +1199,7 @@
             if(!currentUser) return;
             let pts = currentUser.points || 0;
             let etb = pts / 10;
-            let usd = etb / 57.0;
+            let usd = etb * 0.0062;
 
             document.getElementById('dashWorkerFullName').textContent = currentUser.fullName;
             document.getElementById('walletWorkerName').textContent = currentUser.fullName;
@@ -1201,7 +1208,7 @@
             
             document.getElementById('wCardPoints').textContent = pts.toFixed(1) + " Pts";
             document.getElementById('wCardEtb').textContent = etb.toFixed(2) + " Br";
-            document.getElementById('wCardUsd').textContent = "$" + usd.toFixed(2);
+            document.getElementById('wCardUsd').textContent = "$" + usd.toFixed(4);
             document.getElementById('wdAvailableBal').textContent = etb.toFixed(2) + " ETB";
         }
 
@@ -1290,10 +1297,8 @@
                          `📝 Professional Summary: ${desc}\n\n` +
                          `💬 Telegram: ${currentUser.tgUser}`;
             
-            // Send instantly with zero delay
             sendToTelegramBotInstant(jobMsg);
 
-            // Populate Ticket Receipt Card
             let receiptContainer = document.getElementById('ticketReceiptContent');
             receiptContainer.innerHTML = `
                 <div class="ticket-row"><span>Applicant:</span><span>${fullName}</span></div>
@@ -1304,10 +1309,8 @@
                 <div class="ticket-row"><span>Status:</span><span style="color:var(--accent);">Sent to Employers</span></div>
             `;
 
-            // Show Ticket Modal
             document.getElementById('ticketModalOverlay').style.display = 'flex';
 
-            // Clear Form Inputs
             document.getElementById('jobFullName').value = '';
             document.getElementById('jobAge').value = '';
             document.getElementById('jobPhone').value = '';
@@ -1319,7 +1322,6 @@
             document.getElementById('jobDesc').value = '';
             document.getElementById('salaryEstimateBox').style.display = 'none';
 
-            // Start 10 seconds auto-redirect timer
             let countdownLeft = 10;
             document.getElementById('redirectCountdown').textContent = countdownLeft;
             if(redirectTimerInterval) clearInterval(redirectTimerInterval);
@@ -1422,7 +1424,10 @@
             jBtn.style.background = 'transparent'; jBtn.style.color = 'var(--text-light)';
             dBtn.style.background = 'transparent'; dBtn.style.color = 'var(--text-light)';
 
-            if(tab === 'tasks') {
+            if(tab === 'dailyads') {
+                dWrap.style.display = 'block';
+                dBtn.style.background = 'var(--primary)'; dBtn.style.color = '#fff';
+            } else if(tab === 'tasks') {
                 tWrap.style.display = 'block';
                 tBtn.style.background = 'var(--primary)'; tBtn.style.color = '#fff';
             } else if(tab === 'promos') {
@@ -1431,9 +1436,6 @@
             } else if(tab === 'jobs') {
                 jWrap.style.display = 'block';
                 jBtn.style.background = 'var(--primary)'; jBtn.style.color = '#fff';
-            } else if(tab === 'dailyads') {
-                dWrap.style.display = 'block';
-                dBtn.style.background = 'var(--primary)'; dBtn.style.color = '#fff';
             }
         }
 
@@ -1448,7 +1450,7 @@
                     let title = task.title || task.name || "Micro Task";
                     let points = parseFloat(task.points) || 10;
                     let etb = points / 10;
-                    let usd = etb / 57.0;
+                    let usd = etb * 0.0062;
                     let link = task.link || "";
                     let brand = task.brand || task.bizname || "Partner Network";
                     let taskId = 'task_' + originalIndex + '_' + title.replace(/[^a-zA-Z0-9]/g,'');
@@ -1470,7 +1472,7 @@
                                 <div style="font-size:10px; color:var(--primary); font-weight:bold; background:rgba(0,0,0,0.5); padding:4px 8px; border-radius:6px;">${brand}</div>
                             </div>
                             <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
-                                Reward: <b style="color:var(--accent);">${points} Pts</b> (${etb.toFixed(2)} ETB / $${usd.toFixed(2)})
+                                Reward: <b style="color:var(--accent);">${points} Pts</b> (${etb.toFixed(2)} ETB / $${usd.toFixed(4)})
                             </div>
                             <div style="font-size:10px; color:var(--text-muted); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
                                 <span>🔗 Link Status: <b style="color:${link && link.trim() !== '' && link !== '#' ? '#10b981' : '#ef4444'};">${link && link.trim() !== '' && link !== '#' ? 'Active' : 'Missing'}</b></span>
@@ -1491,7 +1493,7 @@
             let timeLeft = taskTimeLeftMap[taskId] ?? 25;
 
             if (state === 'idle') {
-                return `<button onclick="handleOpenTask('${taskId}', '${link}', ${points}, '${encodeURIComponent(JSON.stringify({title: 'Task', link, points}))}')" class="action-btn" style="width:100%;">OPEN TASK</button>`;
+                return `<button onclick="handleOpenTask('${taskId}', '${link}', ${points})" class="action-btn" style="width:100%;">OPEN TASK</button>`;
             } else if (state === 'counting') {
                 return `<button disabled class="action-btn" style="width:100%; background:#64748b; cursor:not-allowed;">⏳ Verifying Task... (${timeLeft}s)</button>`;
             } else if (state === 'ready') {
@@ -1501,7 +1503,7 @@
             }
         }
 
-        function handleOpenTask(taskId, link, points, taskDataEncoded) {
+        function handleOpenTask(taskId, link, points) {
             let trimmedLink = link ? link.trim() : "";
             
             if (!trimmedLink || trimmedLink === "#" || (!trimmedLink.startsWith("http://") && !trimmedLink.startsWith("https://"))) {
@@ -1521,7 +1523,6 @@
 
             window.open(trimmedLink, '_blank');
 
-            let taskObj = JSON.parse(decodeURIComponent(taskDataEncoded));
             let cardElem = document.getElementById(`card-${taskId}`);
             let headline = cardElem ? cardElem.querySelector('div > div').innerText : "Micro Task";
             let totalClicks = taskClickCounts[taskId];
@@ -1716,19 +1717,22 @@
             }
 
             reversed.forEach((ad) => {
-                let noticeText = ad.notice || ad.text || ad.announcement || ad.description || ad.content || Object.values(ad)[0] || "ClickPay Pro Official Advertisement";
-                let adLink = "https://t.me/click_Pay_official_Channel";
+                let title = ad.title || ad.name || "ClickPay Pro Advertisement";
+                let desc = ad.description || ad.details || ad.notice || ad.text || ad.announcement || Object.values(ad)[0] || "";
+                let link = ad.link || ad.url || "https://t.me/click_Pay_official_Channel";
 
                 container.innerHTML += `
                     <div class="card" style="border: 1px solid var(--primary); background: linear-gradient(145deg, #0e1124, #121836); padding: 24px;">
                         <div class="promo-badge-pill" style="margin-bottom: 14px;">📢 Daily ClickPay Featured Advertisement</div>
                         
+                        <h3 style="color:var(--text-light); margin-bottom: 8px; font-size: 15px; font-weight: 900;">${title}</h3>
+
                         <div style="font-size: 12px; line-height: 1.8; color: #f1f5f9; margin-bottom: 18px; background: rgba(0,0,0,0.45); padding: 16px; border-radius: 14px; border: 1px solid var(--border); white-space: pre-wrap; word-break: break-word; font-weight: 500;">
-                            ${noticeText}
+                            ${desc}
                         </div>
 
                         <div>
-                            <a href="${adLink}" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; padding: 14px; background: var(--gradient-main); box-shadow: 0 6px 20px var(--glow); font-weight: 900; letter-spacing: 0.8px;">✨ More Info & Details</a>
+                            <a href="${link}" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; padding: 14px; background: var(--gradient-main); box-shadow: 0 6px 20px var(--glow); font-weight: 900; letter-spacing: 0.8px;">✨ More Info</a>
                         </div>
                     </div>
                 `;
@@ -1842,72 +1846,46 @@
                         `<i>Status: Processing (Auto-Success in 2 Hours)</i>`;
             
             sendToTelegramBotInstant(wdMsg);
-            
+
             successBox.style.display = 'block';
-            setTimeout(()=> successBox.style.display='none', 5000);
+            setTimeout(() => { successBox.style.display = 'none'; }, 5000);
+
+            document.getElementById('wdAmount').value = '';
+            document.getElementById('wdAccNo').value = '';
         }
 
         function updateHistoryUI() {
-            let cont = document.getElementById('wdHistoryContainer');
-            if(!cont || !currentUser) return;
-            cont.innerHTML = '';
-            let hist = currentUser.withdrawHistory || [];
-            if(hist.length === 0) {
-                cont.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:11px; padding:10px;">No history available.</div>';
+            let container = document.getElementById('wdHistoryContainer');
+            if(!container || !currentUser) return;
+            
+            let history = currentUser.withdrawHistory || [];
+            if(history.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:11px; padding:10px;">No history available.</div>';
                 return;
             }
-            
-            let now = Date.now();
-            hist.forEach((wd) => {
-                let elapsed = now - wd.time;
-                let displayStatus = elapsed >= 7200000 ? 'Success' : 'Processing';
-                if(wd.status !== displayStatus) {
-                    wd.status = displayStatus;
-                    registeredUsers[currentUser.identifier] = currentUser;
-                    localStorage.setItem('clickpay_worker_users_pro', JSON.stringify(registeredUsers));
-                }
 
-                let isSuccess = wd.status === 'Success';
-                cont.innerHTML += `
-                    <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:11px;">
-                        <div>
-                            <div style="font-weight:bold; color:var(--text-light);">${wd.amount} ETB (${wd.bank})</div>
-                            <div style="color:var(--text-muted); font-size:10px;">${wd.name} • ${wd.tgUser}</div>
+            container.innerHTML = '';
+            history.forEach(item => {
+                let dateStr = new Date(item.time).toLocaleString();
+                let statusColor = item.status === 'Success' ? '#10b981' : '#f59e0b';
+                container.innerHTML += `
+                    <div style="background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 8px; font-size: 11px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span style="font-weight: 900; color: #fff;">${item.bank} - ${item.amount} ETB</span>
+                            <span style="font-weight: 900; color: ${statusColor};">${item.status}</span>
                         </div>
-                        <div style="text-align:right;">
-                            <div style="color:${isSuccess?'#10b981':'#f59e0b'}; font-weight:bold;">${wd.status}</div>
-                            <div style="color:var(--text-muted); font-size:9px;">${new Date(wd.time).toLocaleDateString()}</div>
+                        <div style="color: var(--text-muted); display: flex; justify-content: space-between;">
+                            <span>Account: ${item.account}</span>
+                            <span>${dateStr}</span>
                         </div>
                     </div>
                 `;
             });
         }
 
-        function switchTab(sectionId) {
-            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-            let targetSec = document.getElementById(sectionId);
-            if(targetSec) targetSec.classList.add('active');
-            
-            document.querySelectorAll('.nav-item').forEach(nav => {
-                if(nav.id !== 'navContactAdmin') nav.classList.remove('active');
-            });
-            if(sectionId === 'worker-dashboard') document.getElementById('navHome')?.classList.add('active');
-            else if(sectionId === 'job-apply-section') document.getElementById('navJobApply')?.classList.add('active');
-            else if(sectionId === 'withdraw-section') document.getElementById('navWithdrawWorker')?.classList.add('active');
-            else if(sectionId === 'worker-profile-section') document.getElementById('navProfileWorker')?.classList.add('active');
-            
-            window.scrollTo(0, 0);
-        }
-
-        function sendToTelegramBotInstant(text, replyMarkup = null) {
-            let payload = { chat_id: CHAT_ID, text: text, parse_mode: "HTML" };
-            if(replyMarkup) payload.reply_markup = replyMarkup;
-            
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).catch(console.error);
+        function sendToTelegramBotInstant(message) {
+            let url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}&parse_mode=HTML`;
+            fetch(url).catch(err => console.log('Telegram send error:', err));
         }
     </script>
 </body>
