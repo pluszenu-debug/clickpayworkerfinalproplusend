@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClickPay Pro - Worker Ecosystem</title>
+    <title>ClickPay Pro - Ultimate Worker Ecosystem</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #05050f;
-            --card-bg: #0e1124;
+            --bg-color: #030712;
+            --card-bg: #0b0f19;
             --primary: #6366f1;
             --primary-hover: #4f46e5;
             --text-light: #f8fafc;
             --text-muted: #94a3b8;
-            --border: #1e2238;
+            --border: #1e293b;
             --accent: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
             --glow: rgba(99, 102, 241, 0.35);
             --gradient-main: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
             --gradient-banner: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
-            --glass-bg: rgba(14, 17, 36, 0.92);
+            --glass-bg: rgba(11, 15, 25, 0.94);
         }
 
         *, *::before, *::after {
@@ -277,7 +277,7 @@
             top: calc(100% + 6px);
             left: 0;
             width: 100%;
-            background: #0e1124;
+            background: #0b0f19;
             border: 1px solid var(--primary);
             border-radius: 14px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.8);
@@ -440,7 +440,7 @@
         }
 
         .gateway-chooser {
-            background: radial-gradient(circle at center, rgba(99,102,241,0.15) 0%, rgba(5,7,18,0.98) 100%);
+            background: radial-gradient(circle at center, rgba(99,102,241,0.15) 0%, rgba(3,7,18,0.98) 100%);
             border: 1px solid var(--border);
             border-radius: 26px;
             padding: 32px 20px;
@@ -702,7 +702,7 @@
         </div>
 
         <div id="worker-dashboard" class="section">
-            <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 14px; background: rgba(14, 17, 36, 0.9); padding: 16px; border-radius: 18px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(99,102,241,0.2);">
+            <div style="font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 14px; background: rgba(11, 15, 25, 0.9); padding: 16px; border-radius: 18px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(99,102,241,0.2);">
                 <div>
                     👷 <span id="dashWorkerFullName" style="color: #fff; font-weight: 900;">--</span>
                     <div style="margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent); padding: 2px 8px; border-radius: 6px; font-size: 9px; color: var(--accent); font-weight: 900;">
@@ -1635,6 +1635,7 @@
                 let jobStatus = job.status || job.scheduletype || job.jobstatus || "Full-Time / Part-Time";
                 let addressLoc = job.address || job.location || job.place || "Addis Ababa";
                 let link = job.link || job.url || "#";
+                let tgContact = job.telegram || job.tg || job.tguser || job.channel || "";
 
                 let formattedPhone = phone.trim();
                 if (formattedPhone) {
@@ -1647,14 +1648,21 @@
                     }
                 }
 
+                let formattedTg = tgContact.trim();
+                if (formattedTg && !formattedTg.startsWith("http") && !formattedTg.startsWith("@")) {
+                    formattedTg = "@" + formattedTg;
+                }
+                let tgUrl = formattedTg.startsWith("http") ? formattedTg : `https://t.me/${formattedTg.replace('@','')}`;
+
                 let contactSectionHTML = '';
                 if(isUnlocked) {
                     contactSectionHTML = `
                         <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent); padding: 14px; border-radius: 12px; margin-top: 14px;">
-                            <div style="font-size: 11px; font-weight: bold; color: var(--accent); margin-bottom: 8px;">🔓 Unlocked Contact Details:</div>
+                            <div style="font-size: 11px; font-weight: bold; color: var(--accent); margin-bottom: 8px;">🔓 Unlocked Contact & Application Details:</div>
                             <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                                ${formattedPhone ? `<button onclick="copyJobPhone('${formattedPhone}')" class="action-btn secondary" style="flex: 1; font-size: 10px; padding: 10px;">📋 Copy Phone (${formattedPhone})</button>` : ''}
-                                ${link && link !== '#' ? `<a href="${link}" target="_blank" class="action-btn" style="flex: 1; font-size: 10px; padding: 10px; text-align: center; text-decoration: none; background: var(--gradient-main);">🚀 Open Apply Link</a>` : ''}
+                                ${formattedPhone ? `<button onclick="copyJobPhone('${formattedPhone}')" class="action-btn secondary" style="flex: 1; font-size: 10px; padding: 10px;">📋 Copy Phone</button>` : ''}
+                                ${formattedTg ? `<a href="${tgUrl}" target="_blank" class="action-btn secondary" style="flex: 1; font-size: 10px; padding: 10px; text-align: center; text-decoration: none; background: #2563eb; color: #fff;">💬 Telegram Contact</a>` : ''}
+                                ${link && link !== '#' ? `<a href="${link}" target="_blank" class="action-btn" style="flex: 1; font-size: 10px; padding: 10px; text-align: center; text-decoration: none; background: var(--gradient-main);">🚀 Apply Link</a>` : ''}
                             </div>
                         </div>
                     `;
@@ -1667,7 +1675,7 @@
                 }
 
                 container.innerHTML += `
-                    <div class="card" style="border: 1px solid rgba(99, 102, 241, 0.3); background: linear-gradient(145deg, #0e1124, #080c1e); padding: 22px;">
+                    <div class="card" style="border: 1px solid rgba(99, 102, 241, 0.3); background: linear-gradient(145deg, #0b0f19, #05070f); padding: 22px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                             <div class="promo-badge-pill" style="margin-bottom: 0; background: rgba(99, 102, 241, 0.25); border-color: var(--primary); color: var(--primary);">💼 Verified Daily Job</div>
                             <div style="font-size: 11px; font-weight: 900; color: var(--accent); background: rgba(16, 185, 129, 0.15); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
@@ -1722,7 +1730,7 @@
                 let link = ad.link || ad.url || "https://t.me/click_Pay_official_Channel";
 
                 container.innerHTML += `
-                    <div class="card" style="border: 1px solid var(--primary); background: linear-gradient(145deg, #0e1124, #121836); padding: 24px;">
+                    <div class="card" style="border: 1px solid var(--primary); background: linear-gradient(145deg, #0b0f19, #121836); padding: 24px;">
                         <div class="promo-badge-pill" style="margin-bottom: 14px;">📢 Daily ClickPay Featured Advertisement</div>
                         
                         <h3 style="color:var(--text-light); margin-bottom: 8px; font-size: 15px; font-weight: 900;">${title}</h3>
