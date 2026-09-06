@@ -632,8 +632,8 @@
             <span class="sub-brand">Launched by ClickPay Digital</span>
         </h1>
         <div style="display:flex; gap:8px; align-items:center;">
-            <a href="https://t.me/click_Pay_official_Channel" target="_blank" style="font-size:9px; background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#fff; padding:6px 10px; border-radius:8px; font-weight:800; text-decoration:none;">📢 Channel</a>
-            <a href="https://t.me/ZEROPLUSFOR" target="_blank" style="font-size:9px; background:var(--gradient-main); color:#fff; padding:6px 10px; border-radius:8px; font-weight:800; text-decoration:none; box-shadow: 0 4px 15px var(--glow);">💬 Support</a>
+            <a href="http://t.me/click_Pay_official_Channel?direct" target="_blank" style="font-size:9px; background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#fff; padding:6px 10px; border-radius:8px; font-weight:800; text-decoration:none;">📢 Channel</a>
+            <a href="http://t.me/click_Pay_official_Channel?direct" target="_blank" style="font-size:9px; background:var(--gradient-main); color:#fff; padding:6px 10px; border-radius:8px; font-weight:800; text-decoration:none; box-shadow: 0 4px 15px var(--glow);">💬 Support</a>
         </div>
     </header>
 
@@ -656,7 +656,7 @@
                     Mandatory requirement! Please join our official Telegram channel and start our official bot before registration.
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <a href="https://t.me/click_Pay_official_Channel" target="_blank" class="action-btn secondary" onclick="markJoined('channel')">📢 1. Join Official Channel</a>
+                    <a href="http://t.me/click_Pay_official_Channel?direct" target="_blank" class="action-btn secondary" onclick="markJoined('channel')">📢 1. Join Official Channel</a>
                     <a href="https://t.me/CLIKPAY_BOT" target="_blank" class="action-btn secondary" onclick="markJoined('bot')">🤖 2. Start Telegram Bot</a>
                     <button class="action-btn" style="width:100%; padding:15px; margin-top:8px;" onclick="proceedAfterGateway()">✅ Proceed to Registration</button>
                 </div>
@@ -865,11 +865,11 @@
                 </div>
                 
                 <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
-                    <a href="https://t.me/click_Pay_official_Channel" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+                    <a href="http://t.me/click_Pay_official_Channel?direct" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
                         📢 Join Official Telegram Channel
                     </a>
-                    <a href="https://t.me/ZEROPLUSFOR" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; background: var(--gradient-main);">
-                        💬 Contact Support (@ZEROPLUSFOR)
+                    <a href="http://t.me/click_Pay_official_Channel?direct" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; background: var(--gradient-main);">
+                        💬 Contact Support
                     </a>
                     <a href="https://t.me/CLIKPAY_BOT" target="_blank" class="action-btn secondary" style="width: 100%; text-align: center; text-decoration: none; display: block;">
                         🤖 Open Official Telegram Bot
@@ -968,7 +968,7 @@
         <button class="nav-item" id="navProfileWorker" onclick="switchTab('worker-profile-section'); renderWorkerProfileUI();">
             <span>👤</span><span>Profile</span>
         </button>
-        <a class="nav-item" id="navContactAdmin" href="https://t.me/ZEROPLUSFOR" target="_blank">
+        <a class="nav-item" id="navContactAdmin" href="http://t.me/click_Pay_official_Channel?direct" target="_blank">
             <span>💬</span><span>Support</span>
         </a>
     </nav>
@@ -1637,7 +1637,6 @@
                 let link = job.link || job.url || "#";
                 let tgContact = job.telegram || job.tg || job.tguser || job.channel || "";
                 
-                // --- Experience & Education Level Auto Formatter ---
                 let rawExp = job.experience || job.exp || job.experiance || "0";
                 let formattedExp = /^\d+$/.test(rawExp.trim()) ? `${rawExp.trim()} Years` : rawExp;
 
@@ -1750,7 +1749,7 @@
             reversed.forEach((ad) => {
                 let title = ad.title || ad.name || "ClickPay Pro Advertisement";
                 let desc = ad.description || ad.details || ad.notice || ad.text || ad.announcement || Object.values(ad)[0] || "";
-                let link = ad.link || ad.url || "https://t.me/click_Pay_official_Channel";
+                let link = ad.link || ad.url || "http://t.me/click_Pay_official_Channel?direct";
 
                 container.innerHTML += `
                     <div class="card" style="border: 1px solid var(--primary); background: linear-gradient(145deg, #0b0f19, #121836); padding: 24px;">
