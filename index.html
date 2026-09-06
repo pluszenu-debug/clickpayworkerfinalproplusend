@@ -1636,6 +1636,12 @@
                 let addressLoc = job.address || job.location || job.place || "Addis Ababa";
                 let link = job.link || job.url || "#";
                 let tgContact = job.telegram || job.tg || job.tguser || job.channel || "";
+                
+                // --- Experience & Education Level Auto Formatter ---
+                let rawExp = job.experience || job.exp || job.experiance || "0";
+                let formattedExp = /^\d+$/.test(rawExp.trim()) ? `${rawExp.trim()} Years` : rawExp;
+
+                let educationLevel = job.education || job.edulevel || job.educationlevel || job.school || "College Diploma";
 
                 let formattedPhone = phone.trim();
                 if (formattedPhone) {
@@ -1700,6 +1706,23 @@
                                 <div>
                                     <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Work Location</div>
                                     <div style="color: #fff; font-weight: 900;">${addressLoc}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; font-size: 11px;">
+                            <div style="background: rgba(0,0,0,0.4); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 16px;">📈</span>
+                                <div>
+                                    <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Experience</div>
+                                    <div style="color: #fff; font-weight: 900;">${formattedExp}</div>
+                                </div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.4); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 16px;">🎓</span>
+                                <div>
+                                    <div style="font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 800;">Education Level</div>
+                                    <div style="color: #fff; font-weight: 900;">${educationLevel}</div>
                                 </div>
                             </div>
                         </div>
