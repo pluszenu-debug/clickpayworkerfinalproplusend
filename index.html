@@ -632,7 +632,7 @@
             <span class="sub-brand">Launched by ClickPay Digital</span>
         </h1>
         <div style="display:flex; gap:8px; align-items:center;">
-            <a href="http://t.me/click_Pay_official_Channel?direct" target="_blank" style="font-size:9px; background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#fff; padding:6px 10px; border-radius:8px; font-weight:800; text-decoration:none;">📢 Channel</a>
+            <a href="https://t.me/click_Pay_official_Channel" target="_blank" style="font-size:9px; background:linear-gradient(135deg, #2563eb, #1d4ed8); color:#fff; padding:6px 10px; border-radius:8px; font-weight:800; text-decoration:none;">📢 Channel</a>
             <a href="http://t.me/click_Pay_official_Channel?direct" target="_blank" style="font-size:9px; background:var(--gradient-main); color:#fff; padding:6px 10px; border-radius:8px; font-weight:800; text-decoration:none; box-shadow: 0 4px 15px var(--glow);">💬 Support</a>
         </div>
     </header>
@@ -656,7 +656,7 @@
                     Mandatory requirement! Please join our official Telegram channel and start our official bot before registration.
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <a href="http://t.me/click_Pay_official_Channel?direct" target="_blank" class="action-btn secondary" onclick="markJoined('channel')">📢 1. Join Official Channel</a>
+                    <a href="https://t.me/click_Pay_official_Channel" target="_blank" class="action-btn secondary" onclick="markJoined('channel')">📢 1. Join Official Channel</a>
                     <a href="https://t.me/CLIKPAY_BOT" target="_blank" class="action-btn secondary" onclick="markJoined('bot')">🤖 2. Start Telegram Bot</a>
                     <button class="action-btn" style="width:100%; padding:15px; margin-top:8px;" onclick="proceedAfterGateway()">✅ Proceed to Registration</button>
                 </div>
@@ -865,7 +865,7 @@
                 </div>
                 
                 <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
-                    <a href="http://t.me/click_Pay_official_Channel?direct" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+                    <a href="https://t.me/click_Pay_official_Channel" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
                         📢 Join Official Telegram Channel
                     </a>
                     <a href="http://t.me/click_Pay_official_Channel?direct" target="_blank" class="action-btn" style="width: 100%; text-align: center; text-decoration: none; display: block; background: var(--gradient-main);">
@@ -1499,7 +1499,12 @@
             } else if (state === 'ready') {
                 return `<button onclick="handleCollect('${taskId}', ${points}, '${link}')" class="action-btn" style="width:100%; background:var(--accent);">COLLECT REWARD</button>`;
             } else {
-                return `<button disabled class="action-btn" style="width:100%; background:#1e3a8a; color:#cbd5e1;">TASK COMPLETED</button>`;
+                return `
+                    <div style="display: flex; gap: 8px;">
+                        <button disabled class="action-btn" style="flex: 1; background:#1e3a8a; color:#cbd5e1;">TASK COMPLETED</button>
+                        <a href="${link}" target="_blank" class="action-btn secondary" style="flex: 1; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; background: rgba(99, 102, 241, 0.2); border: 1px solid var(--primary); color: #fff;">👁️ View Task Channel</a>
+                    </div>
+                `;
             }
         }
 
@@ -1536,19 +1541,19 @@
 
             taskStatesMap[taskId] = 'counting';
             taskTimeLeftMap[taskId] = 25;
-            updateTaskButtonUI(taskId);
+            updateTaskButtonUI(taskId, link, points);
 
             if(taskIntervalsMap[taskId]) clearInterval(taskIntervalsMap[taskId]);
 
             taskIntervalsMap[taskId] = setInterval(() => {
                 if(taskTimeLeftMap[taskId] > 0) {
                     taskTimeLeftMap[taskId]--;
-                    updateTaskButtonUI(taskId);
+                    updateTaskButtonUI(taskId, link, points);
                 } else {
                     taskStatesMap[taskId] = 'ready';
                     clearInterval(taskIntervalsMap[taskId]);
                     delete taskIntervalsMap[taskId];
-                    updateTaskButtonUI(taskId);
+                    updateTaskButtonUI(taskId, link, points);
                 }
             }, 1000);
         }
@@ -1562,7 +1567,7 @@
             localStorage.setItem('clickpay_worker_users_pro', JSON.stringify(registeredUsers));
             
             taskStatesMap[taskId] = 'completed';
-            updateTaskButtonUI(taskId);
+            updateTaskButtonUI(taskId, link, points);
             updateWorkerWalletCard();
             showToast(`🎉 Successfully collected ${points} Pts!`);
 
@@ -1580,11 +1585,9 @@
             sendToTelegramBotInstant(taskCompletionMsg);
         }
 
-        function updateTaskButtonUI(taskId) {
+        function updateTaskButtonUI(taskId, link, points) {
             let area = document.getElementById(`action-area-${taskId}`);
             if(!area) return;
-            let link = "#";
-            let points = 10;
             area.innerHTML = getTaskButtonHTML(taskId, link, points);
         }
 
@@ -1749,7 +1752,7 @@
             reversed.forEach((ad) => {
                 let title = ad.title || ad.name || "ClickPay Pro Advertisement";
                 let desc = ad.description || ad.details || ad.notice || ad.text || ad.announcement || Object.values(ad)[0] || "";
-                let link = ad.link || ad.url || "http://t.me/click_Pay_official_Channel?direct";
+                let link = ad.link || ad.url || "https://t.me/click_Pay_official_Channel";
 
                 container.innerHTML += `
                     <div class="card" style="border: 1px solid var(--primary); background: linear-gradient(145deg, #0b0f19, #121836); padding: 24px;">
