@@ -1089,7 +1089,7 @@
                 box.style.display = 'none';
                 return;
             }
-            let usdVal = amount * 0.0062;
+            let usdVal = amount / 162;
             let pointsEquivalent = amount * 10;
             box.style.display = 'block';
             txt.innerHTML = `${amount} ETB = <b>$${usdVal.toFixed(4)} USD</b> (Equivalent to ${pointsEquivalent} ClickPay Pts)`;
@@ -1199,7 +1199,7 @@
             if(!currentUser) return;
             let pts = currentUser.points || 0;
             let etb = pts / 10;
-            let usd = etb * 0.0062;
+            let usd = etb / 162;
 
             document.getElementById('dashWorkerFullName').textContent = currentUser.fullName;
             document.getElementById('walletWorkerName').textContent = currentUser.fullName;
@@ -1342,24 +1342,56 @@
             switchTab('worker-dashboard');
         }
 
-        function loadGoogleSheetCSV(sheetUrl, callback) {
-            fetch(sheetUrl).then(res => res.text()).then(csvText => {
-                const lines = csvText.split('\n').filter(l => l.trim() !== '');
-                if (lines.length < 1) return callback([]);
-                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-                const result = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const currentline = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    const obj = {};
-                    for (let j = 0; j < headers.length; j++) {
-                        let val = currentline[j] ? currentline[j].trim() : '';
-                        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
-                        obj[headers[j]] = val;
-                    }
-                    result.push(obj);
+        function parseGoogleSheetCSVLine(line) {
+            const cells = [];
+            let value = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"' && line[i + 1] === '"' && inQuotes) {
+                    value += '"';
+                    i++;
+                } else if (ch === '"') {
+                    inQuotes = !inQuotes;
+                } else if (ch === ',' && !inQuotes) {
+                    cells.push(value.trim());
+                    value = '';
+                } else {
+                    value += ch;
                 }
-                callback(result);
-            }).catch(err => callback([]));
+            }
+            cells.push(value.trim());
+            return cells;
+        }
+
+        function loadGoogleSheetCSV(sheetUrl, callback) {
+            const fallbackUrl = sheetUrl
+                .replace('/export?format=csv&gid=', '/gviz/tq?tqx=out:csv&gid=')
+                .replace('/export?gid=', '/gviz/tq?tqx=out:csv&gid=');
+            const urls = [...new Set([sheetUrl, fallbackUrl])];
+            const tryLoad = (index) => {
+                if (index >= urls.length) return callback([]);
+                fetch(urls[index], { cache: 'no-store' }).then(res => {
+                    if (!res.ok) throw new Error('Google Sheets response was not OK');
+                    return res.text();
+                }).then(csvText => {
+                    if (!csvText || /<html[\s>]/i.test(csvText.trim().slice(0, 200))) throw new Error('Google Sheets did not return CSV data');
+                    const lines = csvText.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l => l.trim() !== '');
+                    if (lines.length < 2) return callback([]);
+                    const headers = parseGoogleSheetCSVLine(lines[0]).map(h => h.replace(/^\uFEFF/, '').trim().toLowerCase());
+                    const result = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        const currentline = parseGoogleSheetCSVLine(lines[i]);
+                        const obj = {};
+                        for (let j = 0; j < headers.length; j++) {
+                            if (headers[j]) obj[headers[j]] = currentline[j] ?? '';
+                        }
+                        result.push(obj);
+                    }
+                    callback(result);
+                }).catch(() => tryLoad(index + 1));
+            };
+            tryLoad(0);
         }
 
         function fetchLiveSheetsData() {
@@ -1447,12 +1479,26 @@
                 workerTaskCont.innerHTML = '';
                 reversed.forEach((task, i) => {
                     let originalIndex = cachedTasksData.length - 1 - i;
-                    let title = task.title || task.name || "Micro Task";
-                    let points = parseFloat(task.points) || 10;
-                    let etb = points / 10;
-                    let usd = etb * 0.0062;
-                    let link = task.link || "";
-                    let brand = task.brand || task.bizname || "Partner Network";
+                    const sheetField = (row, aliases, headerPattern) => {
+                        for (const alias of aliases) {
+                            const key = Object.keys(row).find(k => k.replace(/[^a-z0-9]/gi, '').toLowerCase() === alias);
+                            if (key && String(row[key] ?? '').trim() !== '') return row[key];
+                        }
+                        if (headerPattern) {
+                            const key = Object.keys(row).find(k => headerPattern.test(k) && String(row[k] ?? '').trim() !== '');
+                            if (key) return row[key];
+                        }
+                        return '';
+                    };
+                    let title = sheetField(task, ['title','tasktitle','taskname','name','task','taskdescription','description'], /task.?name|task.?title|description|^name$/i) || "Micro Task";
+                    let pointsRaw = String(sheetField(task, ['points','point','rewardpoints','pointsreward','pointreward','taskpoints','reward','rewardpoint','earnpoints'], /point|reward/i)).trim();
+                    // The reward amount is read from the task's Google Sheet row only; there is no hard-coded task reward.
+                    let points = Number(pointsRaw.replace(/,/g, '').replace(/\s*(pts?|points?)\s*$/i, ''));
+                    if(pointsRaw === '' || !Number.isFinite(points) || points < 0) return;
+                    let etb = points / 10; // 10 points = 1 ETB
+                    let usd = etb / 162;   // 1 USD = 162 ETB
+                    let link = sheetField(task, ['link','url','tasklink','taskurl','website','targetlink'], /(^|\s)(url|link|website)(\s|$)/i) || "";
+                    let brand = sheetField(task, ['brand','bizname','business','company','advertiser'], /brand|business|company|advertiser/i) || "Partner Network";
                     let taskId = 'task_' + originalIndex + '_' + title.replace(/[^a-zA-Z0-9]/g,'');
                     let isDone = currentUser.completedTasks && currentUser.completedTasks[taskId];
 
@@ -1627,7 +1673,12 @@
 
             reversed.forEach((job, index) => {
                 let originalIndex = cachedDailyJobsData.length - 1 - index;
-                let jobId = 'job_' + originalIndex;
+                let jobSignature = JSON.stringify(job);
+                let jobHash = 0;
+                for (let i = 0; i < jobSignature.length; i++) {
+                    jobHash = ((jobHash << 5) - jobHash + jobSignature.charCodeAt(i)) | 0;
+                }
+                let jobId = 'job_' + originalIndex + '_' + Math.abs(jobHash);
                 let isUnlocked = unlockedDailyJobs[jobId];
 
                 let title = job.title || job.position || job.jobtitle || Object.values(job)[0] || "Daily Job Opening";
