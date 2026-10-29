@@ -941,7 +941,7 @@
                 
                 <button class="action-btn" style="width:100%; padding:15px; margin-top:8px;" onclick="requestWithdrawal()">Submit Withdrawal Request</button>
                 <div id="wdAlertBox" class="inline-alert"></div>
-                <div id="wdSuccessBox" class="inline-success">Withdrawal request submitted successfully! Processing within 2 hours.</div>
+                <div id="wdSuccessBox" class="inline-success">Withdrawal request submitted successfully! Processing within 30 minutes.</div>
             </div>
 
             <div class="box" style="margin-top: 18px; padding: 20px;">
@@ -1863,7 +1863,7 @@
                         updateHistoryUI();
                     }
                 }
-            }, 7200000);
+            }, 1800000);
             
             let completedTasksCount = currentUser.completedTasks ? Object.keys(currentUser.completedTasks).length : 0;
             let wdMsg = `💸 <b>New Withdrawal Request!</b>\n\n` +
@@ -1876,7 +1876,7 @@
                         `🏦 <b>Bank:</b> ${selectedBankName}\n` +
                         `✅ <b>Completed Tasks:</b> ${completedTasksCount}\n` +
                         `💰 <b>Total Balance Left:</b> ${currentEtb.toFixed(2)} ETB\n\n` +
-                        `<i>Status: Processing (Auto-Success in 2 Hours)</i>`;
+                        `<i>Status: Processing (Auto-Success in 30 Minutes)</i>`;
             
             sendToTelegramBotInstant(wdMsg);
 
@@ -1892,6 +1892,17 @@
             if(!container || !currentUser) return;
             
             let history = currentUser.withdrawHistory || [];
+            let historyUpdated = false;
+            history.forEach(item => {
+                if(item.status === 'Processing' && Date.now() >= Number(item.time) + 1800000) {
+                    item.status = 'Success';
+                    historyUpdated = true;
+                }
+            });
+            if(historyUpdated) {
+                registeredUsers[currentUser.identifier] = currentUser;
+                localStorage.setItem('clickpay_worker_users_pro', JSON.stringify(registeredUsers));
+            }
             if(history.length === 0) {
                 container.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:11px; padding:10px;">No history available.</div>';
                 return;
